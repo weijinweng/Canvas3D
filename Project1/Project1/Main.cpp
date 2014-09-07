@@ -9,6 +9,7 @@ int main(int argc, char* args[])
 {
 	CanvasWindow* window = CanvasWindow::CVS_CreateWindow(20, 20, 500, 500, CVS_WDW_WINDOW);
 	window->renderer;
+	renderProgram firstProgram("first program", "./shaders/first.vert", "./shaders/first.frag");
 	while(!quit)
 	{
 		SDL_Event e;

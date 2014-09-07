@@ -132,13 +132,16 @@ namespace Canvas{
 	};
 
 	//Storage of vertices datas
-	//Memory located in Parent RenderSys
+	//Me5mory located in Parent RenderSys
 	struct Mesh{
 	public:
 		std::string name;
-
+		std::vector<Vertex> vertices;
+		std::vector<unsigned int> indices;
+		GLuint VAO;
 		Mesh();
 		Mesh(std::string name);
+		void initialize();
 		Mesh(char* path, std::string name);
 		~Mesh();
 	};
