@@ -156,6 +156,11 @@ void Mesh::initialize()
 
 }
 
+bool Mesh::loadMeshFromFile(char* filePath)
+{
+
+}
+
 Mesh::~Mesh()
 {
 }

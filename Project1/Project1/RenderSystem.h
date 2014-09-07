@@ -139,6 +139,7 @@ namespace Canvas{
 		std::vector<Vertex> vertices;
 		std::vector<unsigned int> indices;
 		GLuint VAO;
+		bool loadMeshFromFile(char* filePath);
 		Mesh();
 		Mesh(std::string name);
 		void initialize();
