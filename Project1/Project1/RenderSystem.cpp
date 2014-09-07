@@ -19,6 +19,55 @@ Texture::~Texture()
 
 transformNode::transformNode()
 {
+	parent = NULL;
+}
+
+void transformNode::setParent(transformNode* parent)
+{
+	if (this->parent != NULL)
+	{
+		this->parent->removeChild(this);
+	}
+	parent->addChild(this);
+}
+
+void transformNode::removeChild(transformNode* child)
+{
+	for (std::vector<transformNode*>::iterator it = children.begin(), et = children.end(); it != et; it++)
+	{
+		if ((*it) == child)
+			children.erase(it);
+	}
+}
+
+void transformNode::addChild(transformNode* child)
+{
+	children.push_back(child);
+	child->parent = this;
+}
+
+void transformNode::calculateMatrix()
+{
+	transformMatrix = glm::mat4(1.0);
+
+	transformMatrix = glm::scale(transformMatrix, scale);
+	transformMatrix = transformMatrix*glm::mat4_cast(orientation);
+	transformMatrix = glm::translate(transformMatrix, translation);
+
+
+	if (parent != NULL)
+	{
+		transformMatrix = parent->transformMatrix * transformMatrix;
+	}
+}
+
+void transformNode::calculateAllMatrices()
+{
+	calculateMatrix();
+	for (int i = 0; i < children.size(); i++)
+	{
+		children[i]->calculateAllMatrices();
+	}
 }
 
 transformNode::~transformNode()
@@ -115,6 +164,8 @@ renderProgram::renderProgram(std::string name, char* vertex_file_path, char* fra
  
     glDeleteShader(VertexShaderID);
     glDeleteShader(FragmentShaderID);
+
+	programID = ProgramID;
 }
 renderProgram::~renderProgram()
 {
