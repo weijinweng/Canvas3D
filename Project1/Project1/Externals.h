@@ -3,6 +3,7 @@
 
 //STL externals
 #include <stdio.h>
+#include <fstream>
 #include <string>
 #include <list>
 #include <vector>
