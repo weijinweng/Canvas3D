@@ -140,6 +140,7 @@ namespace Canvas{
 		std::vector<unsigned int> indices;
 		GLuint VAO;
 		bool loadMeshFromFile(char* filePath);
+		bool initMeshFromAiMesh(aiMesh* mesh);
 		Mesh();
 		Mesh(std::string name);
 		void initialize();

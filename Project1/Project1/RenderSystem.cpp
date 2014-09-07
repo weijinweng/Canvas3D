@@ -158,7 +158,40 @@ void Mesh::initialize()
 
 bool Mesh::loadMeshFromFile(char* filePath)
 {
+	Assimp::Importer importer;
+	const aiScene* scene = importer.ReadFile(filePath, aiProcess_FlipUVs|aiProcess_GenSmoothNormals);
+	if (scene)
+	{
+		initMeshFromAiMesh(scene->mMeshes[0]);
+	}
+	return true;
+}
 
+bool Mesh::initMeshFromAiMesh(aiMesh* mesh)
+{
+	glm::vec2 nullUV(0,0);
+	for (int i = 0, e = mesh->mNumVertices; i < e; i++)
+	{
+		glm::vec3 pos = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
+		glm::vec2 uv = glm::vec2(mesh->HasTextureCoords(0)? glm::vec2(mesh->mTextureCoords[0][i].x, mesh->mTextureCoords[0][i].y):nullUV);
+		glm::vec3 normal = glm::vec3(mesh->mNormals[i].x, mesh->mNormals[i].y, mesh->mNormals[i].z);
+		
+		this->vertices.push_back(Vertex(pos,uv,normal));
+	}
+
+	for (int i = 0, e = mesh->mNumFaces; i < e; i++)
+	{
+		if (mesh->mFaces[i].mNumIndices != 3)
+		{
+			printf("Triangle is no longer a triangle!! it may have more than 3 vertices!");
+			return false;
+		}
+		this->indices.push_back(mesh->mFaces[i].mIndices[0]);
+		this->indices.push_back(mesh->mFaces[i].mIndices[1]);
+		this->indices.push_back(mesh->mFaces[i].mIndices[2]);
+	}
+	this->initialize();
+	return true;
 }
 
 Mesh::~Mesh()
