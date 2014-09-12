@@ -11,7 +11,7 @@ int main(int argc, char* args[])
 	window->renderer;
 	renderProgram firstProgram("first program", "./shaders/first.vert", "./shaders/first.frag");
 	Mesh newMesh;
-	newMesh.loadMeshFromFile("testMeshes.3ds");
+	newMesh.loadMeshFromFile("suzanne.obj");
 	printf("number of indices is %d", newMesh.indices.size());
 	GLuint MVPID = glGetUniformLocation(firstProgram.programID, "MVP");
 	GLuint VID = glGetUniformLocation(firstProgram.programID,"V");
