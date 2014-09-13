@@ -13,6 +13,31 @@ Texture::Texture(std::string name)
 {
 }
 
+void Texture::loadFile(char* filePath)
+{
+	SDL_Surface* img = IMG_Load(filePath);
+
+	glGenTextures(1, &this->textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	int Mode = GL_RGB;
+
+	if(img->format->BytesPerPixel == 4)
+	{
+		Mode = GL_RGBA;
+	}
+
+	glTexImage2D(GL_TEXTURE_2D, 0, Mode, img->w, img->h, 0, Mode, GL_UNSIGNED_BYTE, img->pixels);
+	
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+
+	this->textureWidth = img->w;
+	this->textureHeight = img->h;
+	this->filePath = filePath;
+	this->textureType = Mode == GL_RGBA? CVS_TXT_RGBA:CVS_TXT_RGB;
+}
+
 Texture::~Texture()
 {
 }
@@ -331,6 +356,14 @@ CanvasWindow::CanvasWindow(int x, int y, int width, int height, int flags):x(x),
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute( SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
 	
+	int imgFlags = IMG_INIT_PNG;
+
+	if( !(IMG_Init( imgFlags ) & imgFlags))
+	{
+		printf( "SDL_image could not be initialize! SDL_image Error: %s\n", IMG_GetError() );
+		return;
+	}
+
 	Uint32 flag = SDL_WINDOW_SHOWN|SDL_WINDOW_OPENGL;
 	
 	if(flags & CVS_WDW_FULLSCREEN)

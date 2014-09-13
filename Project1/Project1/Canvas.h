@@ -12,7 +12,9 @@
 enum CANVASENUM{
 	CVS_NULL = 0,
 	CVS_WDW_FULLSCREEN = 1,
-	CVS_WDW_WINDOW = 1 << 1
+	CVS_WDW_WINDOW = 1 << 1,
+	CVS_TXT_RGB = 1<< 2,
+	CVS_TXT_RGBA = 1 << 3
 };
 
 //Default timer, highest accuracy expressed in milliseconds
@@ -26,8 +28,6 @@ class Timer{
 		timeMS = lastFrameTime - timeMS;
 		timeSec = (double)timeMS/1000;
 	}
-	
-
 };
 
 //Part of major Canvas Sytems require a end and initialization function

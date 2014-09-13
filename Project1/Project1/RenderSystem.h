@@ -37,7 +37,7 @@ namespace Canvas{
 	};
 
 	class fpsCamera:public Camera{
-
+	public:
 	};
 
 	//Textures storage unit.
