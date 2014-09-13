@@ -5,6 +5,10 @@ using namespace Canvas;
 
 std::vector<CanvasWindow*> CVS_MainWindow;
 
+Texture::Texture()
+{
+}
+
 Texture::Texture(int width, int height)
 {
 }
@@ -313,6 +317,7 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 			printf("Error setting swap interval %s\n", SDL_GetError());
 		}
 	}
+	glClearColor( 0.0f, 0.0f, 0.5f, 1.0f);
 	return true;
 }
 

@@ -43,6 +43,7 @@ namespace Canvas{
 	//Textures storage unit.
 	struct Texture{
 		//Texture pointer in opengl Memory
+		Texture();
 		GLuint textureID;
 		int textureWidth;
 		int textureHeight;

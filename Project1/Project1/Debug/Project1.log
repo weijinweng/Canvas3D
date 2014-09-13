@@ -1,12 +1,16 @@
-﻿Build started 2014/9/7 18:03:42.
+﻿Build started 2014/9/13 17:56:41.
      1>Project "C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Project1\Project1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Main.cpp
          Main.cpp
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(113): warning C4099: 'Canvas::renderNode' : type name first seen using 'class' now seen using 'struct'
+     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(114): warning C4099: 'Canvas::renderNode' : type name first seen using 'class' now seen using 'struct'
                  c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(11) : see declaration of 'Canvas::renderNode'
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(136): warning C4099: 'Canvas::Mesh' : type name first seen using 'class' now seen using 'struct'
+     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(137): warning C4099: 'Canvas::Mesh' : type name first seen using 'class' now seen using 'struct'
                  c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(9) : see declaration of 'Canvas::Mesh'
+     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(36): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(37): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(39): warning C4305: 'argument' : truncation from 'double' to 'float'
+     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(104): warning C4305: 'argument' : truncation from 'double' to 'const float'
          GLM: perspective function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
        Link:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.exe" /INCREMENTAL /NOLOGO SDL2.lib SDL2main.lib SDL2_image.lib SDL2_ttf.lib glew32.lib opengl32.lib glu32.lib assimp.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.lib" /MACHINE:X86 Debug\Main.obj
@@ -16,4 +20,4 @@
 
 Build succeeded.
 
-Time Elapsed 00:00:01.22
+Time Elapsed 00:00:01.48
