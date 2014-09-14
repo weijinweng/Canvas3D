@@ -10,9 +10,20 @@ namespace Canvas{
 	class renderProgram;
 	class renderNode;
 
+	struct cameraControls
+	{
+		bool w, a, s, d, z, x, shift;
+		cameraControls(bool all):w(all),a(all),s(all),d(all),z(all),x(all),shift(all)
+		{
+		}
+	};
 
 	class Camera{
 	public:
+		float FOV;
+		float aspectRatio;
+		glm::mat4 Perspective;
+		glm::vec3 position;
 		Camera();
 		void manageInput();
 		virtual glm::mat4 getView();
@@ -33,11 +44,15 @@ namespace Canvas{
 		void moveTo(glm::vec3 destination);
 		//Camera data generation
 		glm::mat4 getView();
-		glm::mat4 getPerspective();
 	};
 
 	class fpsCamera:public Camera{
 	public:
+		cameraControls controls;
+		float verticleAngle, horizontalAngle;
+		fpsCamera(float FOV, float aspectRatio, glm::vec3 position);
+		void getEvents(SDL_Event e);
+		glm::mat4 getView();
 	};
 
 	//Textures storage unit.
@@ -79,6 +94,7 @@ namespace Canvas{
 		void calculateMatrix();
 	public:
 		//Attributes of transforms
+		std::string name;
 		glm::vec3 translation;
 		glm::vec3 scale;
 		glm::fquat orientation;
@@ -114,7 +130,7 @@ namespace Canvas{
 	struct renderNode{
 	public:
 		std::string name;
-		transformNode transform;
+		transformNode* transform;
 		renderProgram* programs;
 		Mesh* mesh;
 		std::vector<shaderTextureID> textureID;

@@ -10,6 +10,7 @@ bool Up = false,
 	Down = false,
 	Left = false,
 	Right  = false,
+	accelerate = false,
 	ShiftUp = false,
 	ShiftDown = false;
 
@@ -31,6 +32,7 @@ void computeMatrix(glm::mat4* view)
 	static int lastTime = 0;
 	int deltaTime = SDL_GetTicks() - lastTime;
 	lastTime = SDL_GetTicks();
+	float multiplier = 1.0f;
 
 	int x,y;
 	SDL_GetMouseState(&x,&y);
@@ -50,29 +52,31 @@ void computeMatrix(glm::mat4* view)
 
 
 	float timeSeconds = (float)deltaTime/1000.0f;
+	if(accelerate)
+		multiplier = 3.0f;
 	if(Up)
 	{
-		position += direction*timeSeconds;
+		position += direction*timeSeconds*multiplier;
 	}
 	if(Down)
 	{
-		position -= direction*timeSeconds;
+		position -= direction*timeSeconds*multiplier;
 	}
 	if (Left)
 	{
-		position += directionRight*timeSeconds;
+		position += directionRight*timeSeconds*multiplier;
 	}
 	if (Right)
 	{
-		position -= directionRight*timeSeconds;
+		position -= directionRight*timeSeconds*multiplier;
 	}
 	if (ShiftUp)
 	{
-		position.y += timeSeconds;
+		position.y += 2*timeSeconds*multiplier;
 	}
 	if (ShiftDown)
 	{
-		position.y -= timeSeconds;
+		position.y -= 2*timeSeconds*multiplier;
 	}
 
 	glm::vec3 directionUp(glm::cross(direction,directionRight));
@@ -156,6 +160,9 @@ int main(int argc, char* args[])
 						break;
 					case SDLK_z:
 						ShiftDown = true;
+						break;
+					case SDLK_LSHIFT:
+						accelerate = true;
 				}
 			}
 			if(e.type == SDL_KEYUP)
@@ -180,6 +187,8 @@ int main(int argc, char* args[])
 					case SDLK_z:
 						ShiftDown = false;
 						break;
+					case SDLK_LSHIFT:
+						accelerate = false;
 				}
 			}
 		}

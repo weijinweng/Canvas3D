@@ -5,6 +5,21 @@ using namespace Canvas;
 
 std::vector<CanvasWindow*> CVS_MainWindow;
 
+Camera::Camera()
+{
+
+}
+
+glm::mat4 Camera::getView()
+{
+}
+
+glm::mat4 Camera::getPerspective()
+{
+	Perspective = glm::perspective(FOV, aspectRatio, 0.1f, 100.0f);
+	return Perspective;
+}
+
 Texture::Texture()
 {
 }
@@ -15,6 +30,71 @@ Texture::Texture(int width, int height)
 
 Texture::Texture(std::string name)
 {
+}
+
+fpsCamera::fpsCamera(float FOV, float aspectRatio, glm::vec3 position):verticleAngle(0.0f),horizontalAngle(0.0f), controls(false)
+{
+	this->FOV = FOV;
+	this->aspectRatio = aspectRatio;
+	this->position = position;
+	this->getPerspective();
+
+}
+
+void fpsCamera::getEvents(SDL_Event e)
+{
+			if(e.type == SDL_KEYDOWN)
+			{
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_w:
+						controls.w = true;
+						break;
+					case SDLK_s:
+						controls.s = true;
+						break;
+					case SDLK_a:
+						controls.a = true;
+						break;
+					case SDLK_d:
+						controls.d = true;
+						break;
+					case SDLK_x:
+						controls.x = true;
+						break;
+					case SDLK_z:
+						controls.z = true;
+						break;
+					case SDLK_LSHIFT:
+						controls.shift = true;
+				}
+			}
+			if(e.type == SDL_KEYUP)
+			{
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_w:
+						controls.w = false;
+						break;
+					case SDLK_s:
+						controls.s = false;
+						break;
+					case SDLK_a:
+						controls.a = false;
+						break;
+					case SDLK_d:
+						controls.d = false;
+						break;
+					case SDLK_x:
+						controls.x = false;
+						break;
+					case SDLK_z:
+						controls.z = false;
+						break;
+					case SDLK_LSHIFT:
+						controls.shift = false;
+				}
+			}
 }
 
 void Texture::loadFile(char* filePath)
