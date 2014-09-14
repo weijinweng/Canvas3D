@@ -9,7 +9,9 @@ bool quit = false;
 bool Up = false,
 	Down = false,
 	Left = false,
-	Right  = false;
+	Right  = false,
+	ShiftUp = false,
+	ShiftDown = false;
 
 float horAngle = 0, vertAngle = 0;
 
@@ -63,6 +65,14 @@ void computeMatrix(glm::mat4* view)
 	if (Right)
 	{
 		position -= directionRight*timeSeconds;
+	}
+	if (ShiftUp)
+	{
+		position.y += timeSeconds;
+	}
+	if (ShiftDown)
+	{
+		position.y -= timeSeconds;
 	}
 
 	glm::vec3 directionUp(glm::cross(direction,directionRight));
@@ -140,6 +150,12 @@ int main(int argc, char* args[])
 						break;
 					case SDLK_q:
 						quit = true;
+						break;
+					case SDLK_x:
+						ShiftUp = true;
+						break;
+					case SDLK_z:
+						ShiftDown = true;
 				}
 			}
 			if(e.type == SDL_KEYUP)
@@ -157,6 +173,12 @@ int main(int argc, char* args[])
 						break;
 					case SDLK_d:
 						Right = false;
+						break;
+					case SDLK_x:
+						ShiftUp = false;
+						break;
+					case SDLK_z:
+						ShiftDown = false;
 						break;
 				}
 			}
