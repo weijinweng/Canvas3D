@@ -98,8 +98,6 @@ namespace Canvas{
 		glm::vec3 translation;
 		glm::vec3 scale;
 		glm::fquat orientation;
-		//the status of the transform node
-	//	bool allocated;
 		//Resultant matrix
 		glm::mat4 transformMatrix;
 		//Node relationships
@@ -112,7 +110,6 @@ namespace Canvas{
 		void removeChild(transformNode* child);
 		//Calculate down a transformTree
 		void calculateAllMatrices();
-		void factorySetting();
 		~transformNode();
 	};
 
@@ -133,19 +130,14 @@ namespace Canvas{
 	struct renderNode{
 	public:
 		std::string name;
-		static transformNode* transform;
+		transformNode* transform;
 		renderProgram* programs;
 		Mesh* mesh;
 		std::vector<shaderTextureID> textureID;
 		renderNode();
 		bool setProgram(renderProgram* program);
-		static transformNode* getNode();
 		renderNode(Mesh* mesh);
-		static void delTranNode();
 	};
-
-		void* operator new(size_t size);
-		void  operator delete(void* ptr);
 
 	//Vertex data. Requires offset to be correct.
 	struct Vertex{
