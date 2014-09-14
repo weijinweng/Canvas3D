@@ -1,9 +1,15 @@
 #include "RenderSystem.h"
-
+#include <map>
 
 using namespace Canvas;
 
 std::vector<CanvasWindow*> CVS_MainWindow;
+
+transformNode* nodeArray[500]; 
+std::list<transformNode*> nodeAllocated;
+std::map<int,transformNode*> mapFree;
+int lowestIndex = 0;
+
 
 Camera::Camera()
 {
@@ -187,8 +193,62 @@ void transformNode::calculateAllMatrices()
 	}
 }
 
+void transformNode::factorySetting()
+{
+	name = "";
+	translation = glm::vec3(0.0f,0.0f,0.0f);
+	scale = glm::vec3(1.0f,1.0f,1.0f);
+	orientation = glm::fquat();
+	transformMatrix = glm::mat4(1.0);
+	parent = NULL;
+	children.clear();
+}
+
 transformNode::~transformNode()
 {
+
+}
+
+renderProgram::renderProgram(std::string name, char* vertPath, char* fragPath):name(name)
+{
+	
+}
+
+//below are the new commitment
+
+void renderNode::delTranNode()
+{
+	nodeAllocated.remove(transform);
+	transform->factorySetting();
+	mapFree.insert(std::pair<int,transformNode*>(mapFree.size(),transform));
+}
+
+transformNode* renderNode::getNode()
+{
+	if (mapFree.empty())
+	{
+		lowestIndex = nodeAllocated.size();
+	}
+	else
+	{
+		lowestIndex = mapFree.begin()->first;
+		mapFree.erase(mapFree.begin());
+	}
+	transformNode* node = nodeArray[lowestIndex];
+	nodeAllocated.push_back(node);
+	return node;
+}
+
+void* operator new(size_t size)
+{
+	renderNode* newnode = getNextNode();
+	return (void*) newNode;
+}
+
+void operator delete(void* ptr)
+{
+	delTranNode();
+	std::free(ptr);
 }
 
 
