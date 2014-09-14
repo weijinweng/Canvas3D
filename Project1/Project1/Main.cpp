@@ -79,7 +79,7 @@ int main(int argc, char* args[])
 	glUseProgram(firstProgram.programID);
 	
 	Texture texture1;
-	texture1.loadFile("knight_color.tga");
+	texture1.loadFile("dragon_knight.jpg");
 	GLint texture2Dloc = glGetUniformLocation(firstProgram.programID, "myTexture");
 	glUniform1i(texture2Dloc,0);
 	glActiveTexture(GL_TEXTURE0 + 0);
@@ -109,7 +109,6 @@ int main(int argc, char* args[])
 
 	glBindVertexArray(newMesh.VAO);
 	
-	glFrontFace(GL_CCW);
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glCullFace(GL_BACK);
