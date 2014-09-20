@@ -185,9 +185,13 @@ int main(int argc, char* args[])
 	pointLight light(0.0f,1.0f,0.0f);
 
 	
-
+	pointLight light2(1.5f,0.0f,0.0f);
 
 	myScene->lights.push_back(&light);
+	light2.diffuse.x = 0;
+	light2.ambient.x = 0;
+	light2.specular.x = 0;
+	myScene->lights.push_back(&light2);
 
 
 	myScene->generateLightBlock();
