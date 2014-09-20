@@ -27,6 +27,56 @@ float fclamp(float value, float max, float min)
 	return value;
 }
 
+void computeMatrix(fpsCamera* cam)
+{
+	static int lastTime = 0;
+	int deltaTime = SDL_GetTicks() - lastTime;
+	lastTime = SDL_GetTicks();
+	float multiplier = 1.0f;
+
+	int x,y;
+	SDL_GetMouseState(&x,&y);
+	cam->verticleAngle += (y-900/2)*(0.01);
+	cam->horizontalAngle -= (x - 1200/2)*(0.01);
+
+	cam->verticleAngle = fclamp(cam->verticleAngle, 3.14/2 + 3.14, -3.14/2 + 3.14);
+
+	glm::vec3 direction(std::cos(cam->verticleAngle)*std::sin(cam->horizontalAngle),
+						std::sin(cam->verticleAngle),
+						std::cos(cam->verticleAngle)*std::cos(cam->horizontalAngle));
+
+	glm::vec3 directionRight(std::sin(cam->horizontalAngle-3.14f/2.0f),
+							 0,
+							 std::cos(cam->horizontalAngle-3.14f/2.0f));
+	float timeSeconds = (float)deltaTime/1000.0f;
+	if(accelerate)
+		multiplier = 3.0f;
+	if(Up)
+	{
+		cam->position += direction*timeSeconds*multiplier;
+	}
+	if(Down)
+	{
+		cam->position -= direction*timeSeconds*multiplier;
+	}
+	if (Left)
+	{
+		cam->position += directionRight*timeSeconds*multiplier;
+	}
+	if (Right)
+	{
+		cam->position -= directionRight*timeSeconds*multiplier;
+	}
+	if (ShiftUp)
+	{
+		cam->position.y += 2*timeSeconds*multiplier;
+	}
+	if (ShiftDown)
+	{
+		cam->position.y -= 2*timeSeconds*multiplier;
+	}
+}
+
 void computeMatrix(glm::mat4* view)
 {
 	static int lastTime = 0;
@@ -36,6 +86,7 @@ void computeMatrix(glm::mat4* view)
 
 	int x,y;
 	SDL_GetMouseState(&x,&y);
+
 
 	vertAngle += (y - 900/2)*(0.01);
 	horAngle -= (x - 1200/2)*(0.01);
@@ -49,7 +100,7 @@ void computeMatrix(glm::mat4* view)
 	glm::vec3 directionRight(std::sin(horAngle-3.14f/2.0f),
 							 0,
 							 std::cos(horAngle-3.14f/2.0f));
-
+	printf("%d\n", deltaTime);
 
 	float timeSeconds = (float)deltaTime/1000.0f;
 	if(accelerate)
@@ -88,17 +139,110 @@ void computeMatrix(glm::mat4* view)
 int main(int argc, char* args[])
 {
 	CanvasWindow* window = CanvasWindow::CVS_CreateWindow(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1200, 900, CVS_WDW_WINDOW);
-	window->renderer;
-	renderProgram firstProgram("first program", "./shaders/first.vert", "./shaders/first.frag");
-	glUseProgram(firstProgram.programID);
+	Scene* myScene = window->renderer.createNewScene();
+
+	std::vector<Mesh*> meshes = myScene->loadFromFile("dk.3ds");
+	fpsCamera mycam(45.0f, 4.0f/3.0f, glm::vec3(0,0,0));
+	myScene->cameras.push_back(&mycam);
+	printf("Mesh number %d\n", meshes.size());
+	for(int i = 0, e = meshes.size(); i < e; ++i)
+	{
+		printf("Mesh vao is %d\n", meshes[i]->VAO);
+	}
+	auto bodyTexture = window->renderer.createNewTexture("Body");
+
+	bodyTexture->loadFile("dragon_knight.jpg");
+
+	renderNode* node = myScene->getNode("knight:kni");
+	node->setTexture("myTextureSampler", "Body");
+
+	Texture* weaponTexture = window->renderer.createNewTexture("Weapon");
+	weaponTexture->loadFile("knight_weapon_color.jpg");
+
+	renderNode* weaponsNode = myScene->getNode("weapon:wea");
+	weaponsNode->setTexture("myTextureSampler", "Weapon");
+
+	Texture* skirtsTexture = window->renderer.createNewTexture("Skirts");
+	skirtsTexture->loadFile("skirt_color.jpg");
+
+	renderNode* skirtsNode = myScene->getNode("skirt1:ski");
+	skirtsNode->setTexture("skirts1:ski", "Skirts");
 	
+	Texture* shoulderTexture = window->renderer.createNewTexture("Shoulder");
+	shoulderTexture->loadFile("shoulders_color.jpg");
+	
+	renderNode* shoulderNode = myScene->getNode("shoulders:");
+	shoulderNode->setTexture("myTextureSampler", "Shoulder");
+
+	window->renderer.createNewTexture("helmet")->loadFile("helmet_color.jpg");
+
+	myScene->getNode("helmet1:he")->setTexture("myTextureSampler", "helmet");
+
+	window->renderer.createNewTexture("shield")->loadFile("shield_color.jpg");
+
+	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");
+
+	pointLight light(0.0f,1.0f,0.0f);
+
+	
+
+
+	myScene->lights.push_back(&light);
+
+
+	myScene->generateLightBlock();
+	//renderProgram firstProgram("first_program", "./shaders/first.vert", "./shaders/first.frag", &window->renderer);
+	//glUseProgram(firstProgram.programID);
+	/*
+	SDL_SysWMinfo wmInfo;
+	SDL_VERSION(&wmInfo.version);
+
+	SDL_GetWindowWMInfo(window->windowHandler, &wmInfo);
+	
+	HWND hwnd = wmInfo.info.win.window;
+
+	SetWindowLong(hwnd, GWL_EXSTYLE,
+				GetWindowLong(hwnd, GWL_EXSTYLE) | WS_EX_LAYERED);
+	SetLayeredWindowAttributes(hwnd, 0, (255*70)/100, LWA_ALPHA);
+	
+    // Extend the frame into the client area.
+	MARGINS margins = {0,0,0,25};
+
+	HRESULT hr = S_OK;
+	BOOL Stuff = 0;
+	hr = DwmIsCompositionEnabled(&Stuff);
+	BOOL enabled = FALSE;
+
+	    // Create and populate the blur-behind structure.
+    DWM_BLURBEHIND bb = {0};
+
+    // Specify blur-behind and blur region.
+    bb.dwFlags = DWM_BB_ENABLE;
+    bb.fEnable = true;
+    bb.hRgnBlur = NULL;
+
+	HRESULT hr2 = DwmEnableBlurBehindWindow(hwnd, &bb);
+
+    if (SUCCEEDED(hr))
+    {
+        printf("the fuck\n");
+    }
+	
+	SDL_Rect somerect = {-10, -10, 200, 200};
+	*/
+
+	/*Scene scene(&window->renderer);
+
+	scene.loadFromFile("dk.3ds");
+
+	scene.root.print();
+
 	Texture texture1;
 	texture1.loadFile("dragon_knight.jpg");
 	GLint texture2Dloc = glGetUniformLocation(firstProgram.programID, "myTexture");
 	glUniform1i(texture2Dloc,0);
 	glActiveTexture(GL_TEXTURE0 + 0);
 	glBindTexture(GL_TEXTURE_2D, texture1.textureID);
-
 
 	Mesh newMesh;
 	newMesh.loadMeshFromFile("dk.3ds");
@@ -121,11 +265,15 @@ int main(int argc, char* args[])
 
 	glm::mat4 MVP = Perspect  * View * Model;
 
-	glBindVertexArray(newMesh.VAO);
+	glBindVertexArray(newMesh.VAO);*/
 	
 	glEnable(GL_DEPTH_TEST);
 	glDepthFunc(GL_LESS);
 	glCullFace(GL_BACK);
+
+	myScene->root.scale = glm::vec3(0.02,0.02,0.02);
+
+	bool turnoff = false;
 	while(!quit)
 	{
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -163,6 +311,9 @@ int main(int argc, char* args[])
 						break;
 					case SDLK_LSHIFT:
 						accelerate = true;
+						break;
+					case SDLK_e:
+						turnoff = true;
 				}
 			}
 			if(e.type == SDL_KEYUP)
@@ -192,15 +343,25 @@ int main(int argc, char* args[])
 				}
 			}
 		}
-		computeMatrix(&View);
-		SDL_WarpMouseInWindow(window->windowHandler,1200/2,900/2);
+		if(!turnoff)
+		{
+			computeMatrix(&mycam);
+			SDL_WarpMouseInWindow(window->windowHandler, 1200/2, 900/2);
+		}
+		myScene->Render();
+		/*
 		glm::mat4 MVP = Perspect  * View * Model;
 		glUniformMatrix4fv(MVPID, 1, GL_FALSE, glm::value_ptr(MVP));
 		glUniformMatrix4fv(VID,1,GL_FALSE, glm::value_ptr(View));
 		glUniformMatrix4fv(MID,1,GL_FALSE, glm::value_ptr(Model));
 		
 		glDrawElements(GL_TRIANGLES, newMesh.indices.size(), GL_UNSIGNED_INT, 0);
+		*/
 
 		SDL_GL_SwapWindow(window->windowHandler);
+
+
+
+
 	}
 }

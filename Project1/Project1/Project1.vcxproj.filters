@@ -19,6 +19,9 @@
     <Filter Include="Header Files\AiSystems">
       <UniqueIdentifier>{7b49cc94-909d-424b-a6c0-4ce39053b8c0}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\GUI">
+      <UniqueIdentifier>{bbe453e9-d2f9-478a-bb8e-eddedeb5f4e2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Externals.h">
@@ -29,6 +32,9 @@
     </ClInclude>
     <ClInclude Include="Canvas.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="GUI.h">
+      <Filter>Header Files\GUI</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

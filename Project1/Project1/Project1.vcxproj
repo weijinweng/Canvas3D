@@ -49,7 +49,7 @@
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <SubSystem>Console</SubSystem>
-      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32.lib;opengl32.lib;glu32.lib;assimp.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2.lib;SDL2main.lib;SDL2_image.lib;SDL2_ttf.lib;glew32.lib;opengl32.lib;glu32.lib;assimp.lib;Dwmapi.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -69,6 +69,7 @@
   <ItemGroup>
     <ClInclude Include="Canvas.h" />
     <ClInclude Include="Externals.h" />
+    <ClInclude Include="GUI.h" />
     <ClInclude Include="RenderSystem.h" />
   </ItemGroup>
   <ItemGroup>

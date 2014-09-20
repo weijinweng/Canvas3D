@@ -5,6 +5,36 @@ using namespace Canvas;
 
 std::vector<CanvasWindow*> CVS_MainWindow;
 
+Light::Light(CANVASENUM m_type):position(0.0f), ambient(1.0f,1.0f,1.0f,1.0f),diffuse(1.0f,1.0f,1.0f,1.0f), specular(1.0f,1.0f,1.0f,1.0f), constAttenuation(2.0f), linearAttentuation(1.0f), quadraticAttentuation(1.0f)
+{
+	switch (m_type)
+	{
+	case CVS_LGT_POINT:
+		type = 0;
+		break;
+	default:
+		type = 0;
+	}
+}
+
+
+pointLight::pointLight(float x, float y, float z, float constAtten, float linAtten, float quadAtten):Light(CVS_LGT_POINT)
+{
+	position = glm::vec4(x,y,z,1);
+}
+
+void copyAiMatrixToGLM(const aiMatrix4x4 *from, glm::mat4 &to)
+{
+	to[0][0] = (GLfloat)from->a1; to[1][0] = (GLfloat)from->a2;
+    to[2][0] = (GLfloat)from->a3; to[3][0] = (GLfloat)from->a4;
+    to[0][1] = (GLfloat)from->b1; to[1][1] = (GLfloat)from->b2;
+    to[2][1] = (GLfloat)from->b3; to[3][1] = (GLfloat)from->b4;
+    to[0][2] = (GLfloat)from->c1; to[1][2] = (GLfloat)from->c2;
+    to[2][2] = (GLfloat)from->c3; to[3][2] = (GLfloat)from->c4;
+    to[0][3] = (GLfloat)from->d1; to[1][3] = (GLfloat)from->d2;
+    to[2][3] = (GLfloat)from->d3; to[3][3] = (GLfloat)from->d4;
+}
+
 Camera::Camera()
 {
 
@@ -12,6 +42,7 @@ Camera::Camera()
 
 glm::mat4 Camera::getView()
 {
+	return glm::mat4(1.0f);
 }
 
 glm::mat4 Camera::getPerspective()
@@ -28,7 +59,7 @@ Texture::Texture(int width, int height)
 {
 }
 
-Texture::Texture(std::string name)
+Texture::Texture(std::string name):name(name)
 {
 }
 
@@ -38,7 +69,6 @@ fpsCamera::fpsCamera(float FOV, float aspectRatio, glm::vec3 position):verticleA
 	this->aspectRatio = aspectRatio;
 	this->position = position;
 	this->getPerspective();
-
 }
 
 void fpsCamera::getEvents(SDL_Event e)
@@ -97,6 +127,23 @@ void fpsCamera::getEvents(SDL_Event e)
 			}
 }
 
+glm::mat4 fpsCamera::getView()
+{
+	glm::vec3 direction(std::cos(verticleAngle)*std::sin(horizontalAngle),
+						std::sin(verticleAngle),
+						std::cos(verticleAngle)*std::cos(horizontalAngle));
+
+	glm::vec3 directionRight(std::sin(horizontalAngle-3.14f/2.0f),
+							 0,
+							 std::cos(horizontalAngle-3.14f/2.0f));
+
+	glm::vec3 up = glm::cross(direction, directionRight);
+
+	glm::mat4 View = glm::lookAt(position,direction+position, up);
+
+	return View;
+}
+
 void Texture::loadFile(char* filePath)
 {
 	SDL_Surface* img = IMG_Load(filePath);
@@ -118,7 +165,7 @@ void Texture::loadFile(char* filePath)
 	{
 		Mode = GL_RGBA;
 	}
-
+	
 	glTexImage2D(GL_TEXTURE_2D, 0, Mode, img->w, img->h, 0, GL_RGB, GL_UNSIGNED_BYTE, img->pixels);
 	
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -134,7 +181,7 @@ Texture::~Texture()
 {
 }
 
-transformNode::transformNode()
+transformNode::transformNode():translation(0,0,0),orientation(glm::vec3(0,0,0)),scale(1,1,1)
 {
 	parent = NULL;
 }
@@ -183,7 +230,48 @@ void transformNode::calculateAllMatrices()
 	calculateMatrix();
 	for (int i = 0; i < children.size(); i++)
 	{
+
 		children[i]->calculateAllMatrices();
+	}
+}
+
+void transformNode::print(int level)
+{
+	printf("subnode\n");
+	printf("translate x%d y%d z%d\n", translation.x, translation.y, translation.z);
+	for(int i = 0, e = children.size(); i < e; ++i)
+	{
+		for(int j = 0, je = level; j < je; j++)
+		{
+			printf("-");
+		}
+		children[i]->print(level+1);
+	}
+
+}
+
+void transformNode::print()
+{
+	printf("node\n");
+	printf("translate x%d y%d z%d\n", translation.x, translation.y, translation.z);
+	for(int i = 0, e = children.size(); i < e; ++i)
+	{
+			printf("-");
+			children[i]->print(2);
+	}
+}
+
+void printAiNode(const aiNode* node, int depth)
+{
+	printf("aiNode with meshes%d\n", node->mNumMeshes);
+	for(int i = 0; i < node->mNumChildren; i++)
+	{
+		printf("-");
+		for (int j = 0; j < depth; j ++)
+		{
+			printf("-");
+		}
+		printAiNode(node->mChildren[i], depth+1);
 	}
 }
 
@@ -191,7 +279,60 @@ transformNode::~transformNode()
 {
 }
 
+renderNode::renderNode()
+{
+}
 
+void renderNode::initFromRenderNode(aiNode* child, std::vector<Mesh*> meshes)
+{
+	name = std::string(child->mName.data);
+	for(int i = 0, e = child->mNumMeshes; i < e; i++)
+	{
+		printf("Node %s added mesh %s\n",name.c_str(), meshes[child->mMeshes[i]]->name.c_str());
+		this->meshes.push_back(meshes[child->mMeshes[i]]);
+	}
+
+	printf("added new render node:%s\n", name.c_str());
+	glm::mat4 assMatrix;
+	copyAiMatrixToGLM(&child->mTransformation, assMatrix);
+	glm::vec4 transform(0,0,0,1);
+	transform = assMatrix*transform;
+	//get translate
+	this->transform.translation.x = transform.x;
+	this->transform.translation.y = transform.y;
+	this->transform.translation.z = transform.z;
+	printf("translate x%f y%f z%f\n", transform.x, transform.y, transform.z);
+	//get scale
+	transform = glm::vec4(1,0,0,1);
+}
+
+bool renderNode::setProgram(renderProgram* program)
+{
+	textureID.clear();
+	for(int i = 0; i < program->textureTemplate.size(); ++i)
+	{
+		textureID.push_back(program->textureTemplate[i]);
+	}
+	return true;
+}
+
+void renderNode::setTexture(std::string name, std::string texturename)
+{
+	for(int i = 0, e = textureID.size(); i < e; ++i)
+	{
+		if(textureID[i].name == name)
+		{
+			textureID[i].setTexture(texturename);
+			return;
+		}
+	}
+
+	printf("Cannot find correct texture\n");
+}
+
+void renderNode::Render()
+{
+}
 /************************************************
 *
 *
@@ -201,15 +342,26 @@ transformNode::~transformNode()
 *
 *
 ************************************************/
-shaderTextureID::shaderTextureID(std::string name)
+shaderTextureID::shaderTextureID(std::string name, RenderSys* parent):name(name),parent(parent)
 {
+	
+}
+
+void shaderTextureID::setTexture(std::string name)
+{
+	texture = parent->getTexture(name);
+	if(texture == NULL)
+	{
+		printf("Error! Texture not found\n");
+		texture = parent->getTexture("default");
+	}
 }
 
 shaderTextureID::~shaderTextureID()
 {
 }
 
-renderProgram::renderProgram(std::string name, char* vertex_file_path, char* fragment_file_path):name(name)
+renderProgram::renderProgram(std::string name, char* vertex_file_path, char* fragment_file_path, RenderSys* parent):name(name)
 {
     // Create the shaders
     GLuint VertexShaderID = glCreateShader(GL_VERTEX_SHADER);
@@ -283,9 +435,101 @@ renderProgram::renderProgram(std::string name, char* vertex_file_path, char* fra
     glDeleteShader(FragmentShaderID);
 
 	programID = ProgramID;
+
+	GLint uniformCount;
+	glGetProgramiv(programID, GL_ACTIVE_UNIFORMS, &uniformCount);
+	std::vector<GLchar> buffer(248);
+	for(int i = 0;  i < uniformCount; ++i)
+	{
+		GLint arraySize = 0;
+		GLenum type = 0;
+		GLsizei actualLength = 0;
+		glGetActiveUniform(programID, i, buffer.size(), &actualLength, &arraySize, &type, &buffer[0]);
+		std::string name((char*)&buffer[0], actualLength);
+		if(type == GL_SAMPLER_2D)
+		{
+			shaderTextureID newtex(name, parent);
+			newtex.setTexture("default");
+			textureTemplate.push_back(newtex);
+			printf("added texture %s\n", newtex.name.c_str());
+		}
+	}
+
+	
 }
 renderProgram::~renderProgram()
 {
+}
+
+
+
+renderProgramID::renderProgramID(renderProgram* renderProgram):program(renderProgram)
+{
+
+}
+
+void renderProgramID::addNode(renderNode* node)
+{
+	childNodes.push_back(node);
+	printf("Node added to renderprogram %s childNodes size %d\n", childNodes.back()->name.c_str(), childNodes.size());
+	node->setProgram(program);
+}
+
+void renderProgramID::toString()
+{
+	for(int i = 0, e = this->childNodes.size(); i < e; ++i)
+	{
+		printf("the name is %s\n", childNodes[i]->name.c_str());
+	}
+}
+
+void renderProgramID::Render(Camera* cam, int num_lights)
+{
+	glUseProgram(program->programID);
+
+	glm::mat4 perspective = cam->Perspective;
+	glm::mat4 View = cam->getView();
+
+	GLuint numLightLoc = glGetUniformLocation(program->programID, "num_lights");
+
+	glUniform1i(numLightLoc, num_lights);
+
+	GLuint ViD = glGetUniformLocation(program->programID, "V");
+	GLuint MVPiD = glGetUniformLocation(program->programID,"MVP");
+	GLuint MiD = glGetUniformLocation(program->programID,"M");
+
+	glUniformMatrix4fv(ViD, 1, GL_FALSE, glm::value_ptr(View));
+
+	
+	for(int i = 0, e = this->childNodes.size(); i < e; ++i)
+	{
+
+		renderNode* node = childNodes[i];
+
+		for(int j = 0, je = node->textureID.size(); j < je; ++j)
+		{
+			GLuint textureLOC = glGetUniformLocation(program->programID, node->textureID[j].name.c_str());
+			glActiveTexture(GL_TEXTURE0 + j);
+			glBindTexture(GL_TEXTURE_2D, node->textureID[j].texture->textureID);
+			glUniform1i(textureLOC, j); 
+		}
+
+		//Draw mesh
+
+		for(int j = 0, je = node->meshes.size(); j < je; ++j)
+		{
+			glBindVertexArray(node->meshes[j]->VAO);
+			
+			glUniformMatrix4fv(MiD, 1, GL_FALSE, glm::value_ptr(node->transform.transformMatrix));
+			
+			glm::mat4 MVP = perspective * View * node->transform.transformMatrix;
+
+			glUniformMatrix4fv(MVPiD, 1, GL_FALSE, glm::value_ptr(MVP));
+
+			glDrawElements(GL_TRIANGLES, node->meshes[j]->indices.size(), GL_UNSIGNED_INT, 0);
+		}
+	}
+
 }
 
 Mesh::Mesh()
@@ -293,12 +537,17 @@ Mesh::Mesh()
 
 }
 
+Mesh::Mesh(std::string name)
+{
+	this->name = name;
+}
+
 void Mesh::initialize()
 {
 	GLuint vertexBuffer, indiceBuffer;
 	glGenVertexArrays(1, &VAO);
 	glBindVertexArray(VAO);
-	printf("mesh initialize!");
+	printf("mesh initialized!\n");
 
 	glGenBuffers(1, &vertexBuffer);
 	glGenBuffers(1, &indiceBuffer);
@@ -338,6 +587,8 @@ bool Mesh::loadMeshFromFile(char* filePath)
 bool Mesh::initMeshFromAiMesh(aiMesh* mesh)
 {
 	glm::vec2 nullUV(0,0);
+	this->name = std::string(mesh->mName.data);
+	printf("Init mesh %s\n", name.c_str());
 	for (int i = 0, e = mesh->mNumVertices; i < e; i++)
 	{
 		glm::vec3 pos = glm::vec3(mesh->mVertices[i].x, mesh->mVertices[i].y, mesh->mVertices[i].z);
@@ -371,12 +622,305 @@ Vertex::Vertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal):position(posi
 }
 
 
-Scene::Scene()
+Scene::Scene(RenderSys* parent):parentSys(parent)
 {
+	this->renderables.reserve(20);
+	this->getRenderProgram("Standard");
+	printf("initialization capacity %d\n", renderables.capacity());
+}
+
+Scene::Scene(RenderSys* parent, char* filepath):parentSys(parent)
+{
+	this->renderables.reserve(20);
+	this->getRenderProgram("Standard");
+	this->loadFromFile(filepath);
+}
+
+
+
+std::vector<Mesh*> Scene::loadFromFile(char* filepath)
+{
+	if(parentSys == NULL)
+	{
+		printf("Error parentSys does not exists\n");
+	}
+	Assimp::Importer importer;
+
+	const aiScene* scene = importer.ReadFile(filepath, aiProcess_FlipUVs|aiProcess_GenSmoothNormals);
+
+	if(scene )
+	{
+		return initSceneFromAiScene(scene);
+	}
+
+	std::vector<Mesh*> meshes;
+
+	return meshes;
+}
+
+void Scene::generateLightBlock()
+{
+	glGenBuffers(1, &light_ubo);
+
+	glBindBuffer(GL_UNIFORM_BUFFER, light_ubo);
+
+	const GLchar* uniformNames[1] = {
+		"Lights.light"
+	};
+
+	GLuint uniformIndices;
+
+	GLuint program = programs[0].program->programID;
+
+	glGetUniformIndices(programs[0].program->programID, 1, uniformNames,&uniformIndices);
+
+	GLint uniformOffsets[1];
+	glGetActiveUniformsiv(program, 1, &uniformIndices, GL_UNIFORM_OFFSET, uniformOffsets);
+
+	GLuint uniformBlockIndex = glGetUniformBlockIndex(program,"Lights");
+	
+	printf("light index is%d\n", uniformBlockIndex);
+
+
+
+	GLsizei uniformBlockSize(0);
+	glGetActiveUniformBlockiv(program, uniformBlockIndex, GL_UNIFORM_BLOCK_DATA_SIZE, &uniformBlockSize);
+
+	printf("uniform block size %d\n", uniformBlockSize);
+
+	const GLchar *names[] =
+	{
+		"Lights.light[0].position",
+		"Lights.light[0].ambient",
+		"Lights.light[0].diffuse",
+		"Lights.light[0].specular",
+		"Lights.light[0].constant_attenuation",
+		"Lights.light[0].linear_attenuation",
+		"Lights.light[0].quadratic_attenuation",
+		"Lights.light[0].spot_direction",
+		"Lights.light[0].spot_cutoff",
+		"Lights.light[0].spot_exponent",
+		"Lights.light[1].position",
+		"Lights.light[1].ambient",
+		"Lights.light[1].diffuse",
+		"Lights.light[1].specular",
+		"Lights.light[1].constant_attenuation",
+		"Lights.light[1].linear_attenuation",
+		"Lights.light[1].quadratic_attenuation",
+		"Lights.light[1].spot_direction",
+		"Lights.light[1].spot_cutoff",
+		"Lights.light[1].spot_exponent",
+		"Lights.light[2].position",
+		"Lights.light[2].ambient",
+		"Lights.light[2].diffuse",
+		"Lights.light[2].specular",
+		"Lights.light[2].constant_attenuation",
+		"Lights.light[2].linear_attenuation",
+		"Lights.light[2].quadratic_attenuation",
+		"Lights.light[2].spot_direction",
+		"Lights.light[2].spot_cutoff",
+		"Lights.light[2].spot_exponent",
+		"Lights.light[3].position",
+		"Lights.light[3].ambient",
+		"Lights.light[3].diffuse",
+		"Lights.light[3].specular",
+		"Lights.light[3].constant_attenuation",
+		"Lights.light[3].linear_attenuation",
+		"Lights.light[3].quadratic_attenuation",
+		"Lights.light[3].spot_direction",
+		"Lights.light[3].spot_cutoff",
+		"Lights.light[3].spot_exponent",
+	};
+
+	GLuint indices[40];
+
+	glGetUniformIndices(program, 40, names, indices);
+
+	for(int i = 0; i < 40; ++i)
+	{
+		printf("Indice index %d with value %d\n",i, indices[i]);
+	}
+
+	std::vector<GLint> lightUniformOffsets (40);
+	
+	glGetActiveUniformsiv(program, lightUniformOffsets.size(), indices, GL_UNIFORM_OFFSET, &lightUniformOffsets[0]);
+
+
+	GLint* offsets = &lightUniformOffsets[0];
+
+	const unsigned int uboSize(uniformBlockSize);
+	std::vector<char> buffer(uboSize);
+
+	int offset;
+
+	printf("R is %f b is %f g is %f\n", lights[0]->diffuse[0], lights[0]->diffuse[1], lights[0]->diffuse[2]);
+	
+	for(int i = 0; i < 40;++i)
+	{
+		printf("offset for index %d is %d\n", i, offsets[i]);
+	}
+
+	for(unsigned int n = 0, e = lights.size(); n < e; ++n)
+	{
+		printf("lighting it up\n");
+		// Light position (vec4)
+		offset = offsets[0 + n * 10];
+		for (int i = 0; i < 4; ++i)
+		{
+			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->position[i];
+			offset += sizeof (GLfloat);
+		}
+		// Light ambient color (vec4)
+		offset = offsets[1 + n * 10];
+		for (int i = 0; i < 4; ++i)
+		{
+			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->ambient[i];
+			offset += sizeof (GLfloat);
+		}
+		// Light diffuse color (vec4)
+		offset = offsets[2 + n * 10];
+		for (int i = 0; i < 4; ++i)
+		{
+			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->diffuse[i];
+			offset += sizeof (GLfloat);
+		}
+		// Light specular color (vec4)
+		offset = offsets[3 + n * 10];
+		for (int i = 0; i < 4; ++i)
+		{
+			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->specular[i];
+			offset += sizeof (GLfloat);
+		}
+		// Light constant attenuation (float)
+		offset = offsets[4 + n * 10];
+		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->constAttenuation;
+		// Light linear attenuation (float)
+		offset = offsets[5 + n * 10];
+		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->linearAttentuation;
+		// Light quadratic attenuation (float)
+		offset = offsets[6 + n * 10];
+		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->quadraticAttentuation;
+		// Light spot direction (vec3)
+		offset = offsets[7 + n * 10];
+		for (int i = 0; i < 3; ++i)
+		{
+			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->spotDirection[i];
+			offset += sizeof (GLfloat);
+		}
+		// Light spot cutoff (float)
+		offset = offsets[8 + n * 10];
+		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->spotCosCutoff;
+		// Light spot exponent (float)
+		offset = offsets[9 + n * 10];
+		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+				lights[n]->spotExponent;
+	}
+	glBufferData(GL_UNIFORM_BUFFER, uboSize, &buffer[0], GL_DYNAMIC_DRAW);
+	glBindBufferBase(GL_UNIFORM_BUFFER, 0, light_ubo);
+	glUniformBlockBinding(program, uniformBlockIndex, 0);
+	for(int i = 0, e = programs.size(); i < e; ++i)
+	{
+		
+		program = programs[i].program->programID;
+		uniformBlockIndex = glGetUniformBlockIndex(program, "Lights");
+		glUniformBlockBinding(program, uniformBlockIndex, 0);
+	}
+}
+
+transformNode* Scene::addRenderNodesFromAiNodes(aiNode* child, std::vector<Mesh*> meshes)
+{
+	static renderNode* nodepointer = 0;
+	renderables.push_back(renderNode());
+	renderNode* ournode = &(renderables.back());
+	printf("The capacity is %d\n", renderables.capacity());
+	for(int i = 0, e = child->mNumChildren; i < e; ++i)
+	{
+		ournode->transform.addChild(addRenderNodesFromAiNodes(child->mChildren[i], meshes));
+	}
+
+	ournode->initFromRenderNode(child, meshes);
+	programs[0].addNode(ournode);
+	printf("node name is %s\n", ournode->name.c_str());
+	if(nodepointer != &renderables[0])
+		printf("secondary error found!\n");
+	nodepointer = &renderables[0];
+	if(&renderables[0] != programs[0].childNodes[0])
+		printf("error found!\n");
+
+	return &ournode->transform;
+}
+
+renderNode* Scene::getNode(std::string name)
+{
+	for(int i = 0, e = renderables.size(); i < e; ++i)
+	{
+		if(renderables[i].name == name)
+			return &renderables[i];
+	}
+
+	printf("Error finding\n");
+	return NULL;
+}
+
+void Scene::initRenderNodesFromAiScene(aiNode* root, std::vector<Mesh*> meshes)
+{
+
+	for(int i = 0, e = root->mNumChildren; i < e; ++i)
+	{
+		this->root.addChild(addRenderNodesFromAiNodes(root->mChildren[i], meshes));
+	}
+}
+
+std::vector<Mesh*> Scene::initSceneFromAiScene(const aiScene* scene)
+{
+	std::vector<Mesh*> meshes = parentSys->initMeshesFromAiScene(scene->mMeshes, scene->mNumMeshes);
+
+	printf("renderable capacity %d\n", renderables.capacity());
+
+	initRenderNodesFromAiScene(scene->mRootNode, meshes);
+
+	printAiNode(scene->mRootNode,0);
+	return meshes;
+}
+
+void Scene::Render()
+{
+	Render(0);
+}
+
+void Scene::Render(int index)
+{
+	if((cameras.size()==0))
+	{
+		printf("No Cameras in scene! add one before rendering\n");
+		return;
+	}
+	root.calculateAllMatrices();
+
+
+
+	for(int i = 0, e = programs.size(); i < e; ++i)
+	{
+		programs[i].Render(cameras[index], lights.size());
+	}
 }
 
 Scene::~Scene()
 {
+}
+
+void Scene::getRenderProgram(std::string name)
+{
+	this->programs.push_back(renderProgramID(parentSys->getProgram(name)));
 }
 
 RenderSys::RenderSys()
@@ -406,6 +950,14 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 		}
 	}
 	glClearColor( 0.0f, 0.0f, 0.5f, 1.0f);
+	meshes.reserve(50);
+	textures.reserve(50);
+	programs.reserve(50);
+	Texture* tex = this->createNewTexture("default");
+	tex->loadFile("./textures/default.tga");
+
+	this->createNewProgram("Standard", "./shaders/Phong.vert", "./shaders/Phong.frag");
+
 	return true;
 }
 
@@ -434,8 +986,70 @@ void RenderSys::unloadAllMemory()
 {
 }
 
+Scene* RenderSys::createNewScene()
+{
+	scenes.push_back(Scene(this));
+	scenes.back().renderables.reserve(20);
+	printf("creation capacity %d\n", scenes.back().renderables.capacity());
+	return &scenes.back();
+}
+
+renderProgram* RenderSys::createNewProgram(std::string name, char* vertPath, char* fragPath)
+{
+	programs.push_back(renderProgram(name, vertPath, fragPath, this));
+	return &programs.back();
+}
+
+Texture* RenderSys::createNewTexture(std::string name)
+{
+	textures.push_back(Texture(name));
+	printf("Texture created\n");
+	return &textures.back();
+}
+
+renderProgram* RenderSys::getProgram(std::string name)
+{
+	for(int i = 0, e = programs.size(); i < e; ++i)
+	{
+		if(programs[i].name == name)
+			return &programs[i];
+	}
+	return NULL;
+}
+
 RenderSys::~RenderSys()
 {
+}
+
+std::vector<Mesh*> RenderSys::initMeshesFromAiScene(aiMesh** mesh, int meshcount)
+{
+	std::vector<Mesh*> newmeshes;
+	for(int i = 0, e = meshcount; i < e; ++i)
+	{
+		meshes.push_back(Mesh());
+		Mesh* newMesh = &meshes.back();
+		newMesh->initMeshFromAiMesh(mesh[i]);
+		newmeshes.push_back(newMesh);
+	}
+	return newmeshes;
+}
+
+Texture* RenderSys::getTexture(std::string name)
+{
+	printf("textures size %d\n", textures.size());
+	for(int i = 0, e = textures.size(); i < e; ++i)
+	{
+		printf("textures name %s\n", textures[i].name.c_str());
+		if(textures[i].name == name)
+			return &textures[i];
+	}
+	return NULL;
+}
+
+Mesh* RenderSys::createNewMesh(std::string mesh)
+{
+	meshes.push_back(Mesh(mesh));
+	return &meshes.back();
 }
 
 CanvasWindow::CanvasWindow(int x, int y, int width, int height, int flags):x(x), y(y), width(width), height(height)
@@ -494,4 +1108,3 @@ CanvasWindow* CanvasWindow::CVS_CreateWindow(int x, int y, int width, int height
 	CVS_MainWindow.push_back(window);
 	return window;
 }
-

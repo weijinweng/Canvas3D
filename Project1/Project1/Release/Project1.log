@@ -1,0 +1,74 @@
+﻿Build started 9/15/2014 12:46:04 AM.
+     1>Project "C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Project1\Project1.vcxproj" on node 2 (Build target(s)).
+     1>ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /Zi /nologo /W3 /WX- /sdl /O2 /Oi /Oy- /GL /D _MBCS /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt RenderSystem.cpp
+         RenderSystem.cpp
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\RenderSystem.h(160): warning C4099: 'Canvas::renderNode' : type name first seen using 'class' now seen using 'struct'
+                 c:\users\weijin\documents\github\canvas3d\project1\project1\RenderSystem.h(12) : see declaration of 'Canvas::renderNode'
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\RenderSystem.h(187): warning C4099: 'Canvas::Mesh' : type name first seen using 'class' now seen using 'struct'
+                 c:\users\weijin\documents\github\canvas3d\project1\project1\RenderSystem.h(10) : see declaration of 'Canvas::Mesh'
+     1>RenderSystem.cpp(213): warning C4018: '<' : signed/unsigned mismatch
+         GLM: perspective function taking degrees as a parameter is deprecated. #define GLM_FORCE_RADIANS before including GLM headers to remove this message.
+       Link:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Release\Canvas3d.exe" /NOLOGO kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Release\Canvas3d.pdb" /OPT:REF /OPT:ICF /LTCG /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Release\Canvas3d.lib" /MACHINE:X86 /SAFESEH Release\Main.obj
+         Release\RenderSystem.obj
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewActiveTexture
+     1>Main.obj : error LNK2001: unresolved external symbol __imp__glDepthFunc@4
+     1>Main.obj : error LNK2001: unresolved external symbol __imp__glClear@4
+     1>Main.obj : error LNK2001: unresolved external symbol __imp__glDrawElements@16
+     1>Main.obj : error LNK2001: unresolved external symbol _SDL_GL_SwapWindow
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewUniform3f
+     1>Main.obj : error LNK2001: unresolved external symbol _SDL_WarpMouseInWindow
+     1>Main.obj : error LNK2001: unresolved external symbol _SDL_PollEvent
+     1>Main.obj : error LNK2001: unresolved external symbol __imp__glBindTexture@8
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewUseProgram
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewBindVertexArray
+     1>Main.obj : error LNK2001: unresolved external symbol _SDL_GetMouseState
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewUniformMatrix4fv
+     1>Main.obj : error LNK2001: unresolved external symbol __imp__glCullFace@4
+     1>Main.obj : error LNK2001: unresolved external symbol _SDL_GetTicks
+     1>Main.obj : error LNK2001: unresolved external symbol __imp__glEnable@4
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewUniform1i
+     1>Main.obj : error LNK2001: unresolved external symbol __imp____glewGetUniformLocation
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewBindBuffer
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glClearColor@16
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _SDL_Init
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewVertexAttribPointer
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _SDL_GL_SetSwapInterval
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewDeleteShader
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewCreateShader
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewGetShaderInfoLog
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glewInit@0
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewLinkProgram
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewCompileShader
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewGenVertexArrays
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _SDL_CreateWindow
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glTexImage2D@36
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewShaderSource
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewBufferData
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _SDL_GL_CreateContext
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glTexParameteri@12
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glewGetErrorString@4
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glewExperimental
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _IMG_Init
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewDeleteBuffers
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewGenBuffers
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewGetProgramiv
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _SDL_GetError
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _SDL_GL_SetAttribute
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol "public: struct aiScene const * __thiscall Assimp::Importer::ReadFile(char const *,unsigned int)" (?ReadFile@Importer@Assimp@@QAEPBUaiScene@@PBDI@Z)
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol "public: __thiscall Assimp::Importer::~Importer(void)" (??1Importer@Assimp@@QAE@XZ)
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol "public: __thiscall Assimp::Importer::Importer(void)" (??0Importer@Assimp@@QAE@XZ)
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewGetShaderiv
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewGetProgramInfoLog
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewCreateProgram
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp__glGenTextures@8
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol _IMG_Load
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewEnableVertexAttribArray
+     1>RenderSystem.obj : error LNK2001: unresolved external symbol __imp____glewAttachShader
+     1>C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Release\Canvas3d.exe : fatal error LNK1120: 54 unresolved externals
+     1>Done Building Project "C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Project1\Project1.vcxproj" (Build target(s)) -- FAILED.
+
+Build FAILED.
+
+Time Elapsed 00:00:01.06

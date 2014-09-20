@@ -12,9 +12,12 @@
 enum CANVASENUM{
 	CVS_NULL = 0,
 	CVS_WDW_FULLSCREEN = 1,
-	CVS_WDW_WINDOW = 1 << 1,
-	CVS_TXT_RGB = 1<< 2,
-	CVS_TXT_RGBA = 1 << 3
+	CVS_WDW_WINDOW = 1 << 1,//2
+	CVS_TXT_RGB = 1<< 2,//4
+	CVS_TXT_RGBA = 1 << 3,//8
+	CVS_LGT_POINT = 3,
+	CVS_LGT_SPOT = 5,
+	CVS_LGT_DIRECTIONAL = 6
 };
 
 //Default timer, highest accuracy expressed in milliseconds
@@ -38,5 +41,4 @@ public:
 	virtual bool end(){return false;}
 	~Subsystem(){}
 };
-
 #endif

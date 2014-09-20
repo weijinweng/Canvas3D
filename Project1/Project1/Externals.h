@@ -12,6 +12,10 @@
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <SDL_thread.h>
+#include <SDL_syswm.h>
+//Windows only API
+#include <Windows.h>
+#include <dwmapi.h>
 #undef main
 //GLEW for opengl
 #include <gl\glew.h>
