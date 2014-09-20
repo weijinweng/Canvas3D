@@ -141,7 +141,7 @@ int main(int argc, char* args[])
 	CanvasWindow* window = CanvasWindow::CVS_CreateWindow(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1200, 900, CVS_WDW_WINDOW);
 	Scene* myScene = window->renderer.createNewScene();
 
-	std::vector<Mesh*> meshes = myScene->loadFromFile("dk.3ds");
+	std::vector<Mesh*> meshes = myScene->loadFromFile("test2.obj");
 	fpsCamera mycam(45.0f, 4.0f/3.0f, glm::vec3(0,0,0));
 	myScene->cameras.push_back(&mycam);
 	printf("Mesh number %d\n", meshes.size());
@@ -149,7 +149,7 @@ int main(int argc, char* args[])
 	{
 		printf("Mesh vao is %d\n", meshes[i]->VAO);
 	}
-	auto bodyTexture = window->renderer.createNewTexture("Body");
+	/*auto bodyTexture = window->renderer.createNewTexture("Body");
 
 	bodyTexture->loadFile("dragon_knight.jpg");
 
@@ -180,7 +180,7 @@ int main(int argc, char* args[])
 
 	window->renderer.createNewTexture("shield")->loadFile("shield_color.jpg");
 
-	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");
+	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");*/
 
 	pointLight light(0.0f,1.0f,0.0f);
 
@@ -188,9 +188,6 @@ int main(int argc, char* args[])
 	pointLight light2(1.5f,0.0f,0.0f);
 
 	myScene->lights.push_back(&light);
-	light2.diffuse.x = 0;
-	light2.ambient.x = 0;
-	light2.specular.x = 0;
 	myScene->lights.push_back(&light2);
 
 
