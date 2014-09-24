@@ -32,8 +32,6 @@ namespace Canvas{
 		float spotExponent;
 		float spotCosCutoff;
 		Light(CANVASENUM type);
-		GLuint shadowTexture;
-		bool shadow;
 	};
 
 	struct spotLight{
@@ -228,9 +226,7 @@ namespace Canvas{
 	//Scene 
 	class Scene{
 	public:
-		GLuint shadowMapFrameBuffer;
 		GLuint light_ubo;
-		renderProgram* shadowProgram;
 		std::vector<Camera*> cameras;
 		std::vector<Light*> lights;
 		RenderSys* parentSys;
@@ -249,10 +245,6 @@ namespace Canvas{
 		void Render();
 		void Render(int index);
 		void getRenderProgram(std::string programName);
-		void generateShadow();
-		void initializeShadowMap();
-		void setShadowShader(std::string name = "Shadow");
-		void testShadowMap();
 		~Scene();
 	};
 

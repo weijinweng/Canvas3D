@@ -5,7 +5,7 @@ using namespace Canvas;
 
 std::vector<CanvasWindow*> CVS_MainWindow;
 
-Light::Light(CANVASENUM m_type):position(0.0f), ambient(1.0f,1.0f,1.0f,1.0f),diffuse(1.0f,1.0f,1.0f,1.0f), specular(1.0f,1.0f,1.0f,1.0f), constAttenuation(1.0f), linearAttentuation(0.4f), quadraticAttentuation(0.4f)
+Light::Light(CANVASENUM m_type):position(0.0f), ambient(1.0f,1.0f,1.0f,1.0f),diffuse(1.0f,1.0f,1.0f,1.0f), specular(1.0f,1.0f,1.0f,1.0f), constAttenuation(2.0f), linearAttentuation(1.0f), quadraticAttentuation(1.0f)
 {
 	switch (m_type)
 	{
@@ -626,7 +626,6 @@ Scene::Scene(RenderSys* parent):parentSys(parent)
 {
 	this->renderables.reserve(20);
 	this->getRenderProgram("Standard");
-	this->setShadowShader();
 	printf("initialization capacity %d\n", renderables.capacity());
 }
 
@@ -835,7 +834,6 @@ void Scene::generateLightBlock()
 		uniformBlockIndex = glGetUniformBlockIndex(program, "Lights");
 		glUniformBlockBinding(program, uniformBlockIndex, 0);
 	}
-	initializeShadowMap();
 }
 
 transformNode* Scene::addRenderNodesFromAiNodes(aiNode* child, std::vector<Mesh*> meshes)
@@ -908,17 +906,12 @@ void Scene::Render(int index)
 	}
 	root.calculateAllMatrices();
 
-	generateShadow();
+
 
 	for(int i = 0, e = programs.size(); i < e; ++i)
 	{
 		programs[i].Render(cameras[index], lights.size());
 	}
-}
-
-void Scene::setShadowShader(std::string name)
-{
-	shadowProgram = parentSys->getProgram(name);
 }
 
 Scene::~Scene()
@@ -928,110 +921,6 @@ Scene::~Scene()
 void Scene::getRenderProgram(std::string name)
 {
 	this->programs.push_back(renderProgramID(parentSys->getProgram(name)));
-}
-
-void Scene::initializeShadowMap()
-{
-	glGenFramebuffers(1,&shadowMapFrameBuffer);
-	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFrameBuffer);
-
-	for (int i = 0; i < lights.size(); i++)
-	{
-		glGenTextures(1, &lights[i]->shadowTexture);
-		glBindTexture(GL_TEXTURE_2D, lights[0]->shadowTexture);
-		glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT16, 1024,1024,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lights[i]->shadowTexture,0);
-		glDrawBuffer(GL_NONE);
-
-		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			printf("shadowInitialization error!!!!!");
-			return;
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void Scene::generateShadow()
-{
-	glUseProgram(shadowProgram->programID);
-
-	GLuint depthMatrixID = glGetUniformLocation(shadowProgram->programID, "depthMVP");
-
-	glm::vec3 pointLightDir = glm::vec3(0,0,0);
-
-	GLuint program = shadowProgram->programID;
-
-	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-
-
-	glBindFramebuffer(GL_FRAMEBUFFER, this->shadowMapFrameBuffer);
-
-	for(int i = 0, e = lights.size(); i < e; ++i)
-	{
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lights[i]->shadowTexture,0);
-
-		glDrawBuffer(GL_NONE);
-
-		for(int j = 0, je = renderables.size(); j < je; ++j)
-		{
-			glm::mat4 depthViewMatrix = glm::lookAt(glm::vec3(lights[i]->position.x,lights[i]->position.y,lights[i]->position.z),glm::vec3(0,0,0),glm::vec3(0,1,0));
-			glm::mat4 depthModelMatrix = renderables[j].transform.transformMatrix;
-			glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-	
-			glUniformMatrix4fv(program, 1,GL_FALSE, glm::value_ptr(depthMVP));
-
-			for(int k = 0, ke = renderables[j].meshes.size(); k < ke; ++k)
-			{
-				glBindVertexArray(renderables[j].meshes[k]->VAO);
-
-				glDrawElements(GL_TRIANGLES, renderables[j].meshes[k]->indices.size(), GL_UNSIGNED_INT, 0);
-			}
-		}
-	}
-	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-}
-
-void Scene::testShadowMap()
-{
-	glUseProgram(shadowProgram->programID);
-
-	GLuint depthMatrixID = glGetUniformLocation(shadowProgram->programID, "depthMVP");
-
-	if(depthMatrixID == -1)
-	{
-	//	printf("error");
-	}
-
-	glm::vec3 pointLightDir = glm::vec3(0,0,0);
-
-	GLuint program = shadowProgram->programID;
-
-	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-
-	for(int i = 0, e = lights.size(); i < e; ++i)
-	{
-
-		for(int j = 0, je = renderables.size(); j < je; ++j)
-		{
-			glm::mat4 depthViewMatrix = cameras[0]->getView();
-			glm::mat4 depthModelMatrix = renderables[j].transform.transformMatrix;
-			glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-	
-			glUniformMatrix4fv(program, 1,GL_FALSE, glm::value_ptr(depthMVP));
-
-			for(int k = 0, ke = renderables[j].meshes.size(); k < ke; ++k)
-			{
-				glBindVertexArray(renderables[j].meshes[k]->VAO);
-				glDrawElements(GL_TRIANGLES, renderables[j].meshes[k]->indices.size(), GL_UNSIGNED_INT, 0);
-			}
-		}
-	}
 }
 
 RenderSys::RenderSys()
@@ -1067,8 +956,8 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 	Texture* tex = this->createNewTexture("default");
 	tex->loadFile("./textures/default.tga");
 
-	this->createNewProgram("Standard", "./shaders/Blinn.vert", "./shaders/Blinn.frag");
-	this->createNewProgram("Shadow", "./shaders/shadow.vert", "./shaders/shadow.frag");
+	this->createNewProgram("Standard", "./shaders/Phong.vert", "./shaders/Phong.frag");
+
 	return true;
 }
 
@@ -1125,7 +1014,6 @@ renderProgram* RenderSys::getProgram(std::string name)
 		if(programs[i].name == name)
 			return &programs[i];
 	}
-	printf("Error getting program %s\n", name.c_str());
 	return NULL;
 }
 
