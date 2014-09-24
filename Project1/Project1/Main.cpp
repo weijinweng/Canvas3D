@@ -141,6 +141,9 @@ int main(int argc, char* args[])
 	CanvasWindow* window = CanvasWindow::CVS_CreateWindow(SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 1200, 900, CVS_WDW_WINDOW);
 	Scene* myScene = window->renderer.createNewScene();
 
+	Texture* texture = window->renderer.createNewTexture("stuffffff");
+	texture->loadFile("dragon_knight.jpg");
+
 	std::vector<Mesh*> meshes = myScene->loadFromFile("test2.obj");
 	fpsCamera mycam(45.0f, 4.0f/3.0f, glm::vec3(0,0,0));
 	myScene->cameras.push_back(&mycam);
@@ -180,18 +183,18 @@ int main(int argc, char* args[])
 
 	window->renderer.createNewTexture("shield")->loadFile("shield_color.jpg");
 
-	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");*/
-
-	pointLight light(0.0f,1.0f,0.0f);
-
+	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");
+	*/
+	pointLight light(0.0f,10.0f,5.0f);
+	
 	
 	pointLight light2(1.5f,0.0f,0.0f);
 
 	myScene->lights.push_back(&light);
 	myScene->lights.push_back(&light2);
 
-
 	myScene->generateLightBlock();
+	myScene->generateShadow();
 	//renderProgram firstProgram("first_program", "./shaders/first.vert", "./shaders/first.frag", &window->renderer);
 	//glUseProgram(firstProgram.programID);
 	/*
@@ -274,6 +277,53 @@ int main(int argc, char* args[])
 
 	myScene->root.scale = glm::vec3(0.02,0.02,0.02);
 
+	renderProgram* program = window->renderer.createNewProgram("image", "./shaders/image.vert", "./shaders/image.frag");
+	
+	glUseProgram(program->programID);
+
+	float vertices[] = {
+		-1.0, 1.0,
+		-1.0, -1.0,
+		 1.0, -1.0,
+		 1.0, 1.0
+	};
+
+	unsigned int indices[] = {
+		1,2,3,1,3,4
+	};
+
+	float uv[] = 
+	{
+		0.0,0.0,
+		0.0,1.0,
+		1.0,1.0,
+		1.0,0.0
+	};
+
+	GLuint VAO, indiceBuffer, uvBuffer, verticeBuffer;
+
+	glGenVertexArrays(1,&VAO);
+	glBindVertexArray(VAO);
+
+	glGenBuffers(1,&verticeBuffer);
+	glGenBuffers(1, &uvBuffer);
+	glGenBuffers(1, &indiceBuffer);
+
+	glBindBuffer(GL_ARRAY_BUFFER, verticeBuffer);
+	glEnableVertexAttribArray(0);
+	glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices, GL_STATIC_DRAW);
+	glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);
+
+	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
+	glEnableVertexAttribArray(1);
+	glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), uv, GL_STATIC_DRAW);
+	glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indiceBuffer);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER,6*sizeof(unsigned int),indices,GL_STATIC_DRAW);
+
+	GLuint texturelocation = glGetUniformLocation(program->programID, "myTexture");
+
 	bool turnoff = false;
 	while(!quit)
 	{
@@ -350,6 +400,9 @@ int main(int argc, char* args[])
 			SDL_WarpMouseInWindow(window->windowHandler, 1200/2, 900/2);
 		}
 		myScene->Render();
+
+		myScene->testShadowMap();
+
 		/*
 		glm::mat4 MVP = Perspect  * View * Model;
 		glUniformMatrix4fv(MVPID, 1, GL_FALSE, glm::value_ptr(MVP));
