@@ -5,22 +5,96 @@ using namespace Canvas;
 
 std::vector<CanvasWindow*> CVS_MainWindow;
 
-Light::Light(CANVASENUM m_type):position(0.0f), ambient(1.0f,1.0f,1.0f,1.0f),diffuse(1.0f,1.0f,1.0f,1.0f), specular(1.0f,1.0f,1.0f,1.0f), constAttenuation(1.0f), linearAttentuation(0.4f), quadraticAttentuation(0.4f)
+LightProperties::LightProperties( glm::vec4 position,  glm::vec4 ambient,  glm::vec4 diffuse,  glm::vec4 specular,  float constAtten, float linAtten, float quadAtten):position(position),ambient(ambient),diffuse(diffuse),specular(specular), constAttenuation(constAtten),linearAttentuation(linAtten),quadraticAttentuation(quadAtten)
 {
-	switch (m_type)
-	{
-	case CVS_LGT_POINT:
-		type = 0;
-		break;
-	default:
-		type = 0;
-	}
+	type = -1;
+
 }
 
-
-pointLight::pointLight(float x, float y, float z, float constAtten, float linAtten, float quadAtten):Light(CVS_LGT_POINT)
+Light::Light():active(false),shadow(false),properties(glm::vec4(0.0f), glm::vec4(1.0f), glm::vec4(1.0f), glm::vec4(1.0f), 0.0f,0.0f,1.0f)
 {
-	position = glm::vec4(x,y,z,1);
+	
+
+}
+
+void Light::spotLight(glm::vec3 position, glm::vec3 target, float cosCutoff)
+{
+	properties.position = glm::vec4(position, 1);
+	glm::vec3 direction = target - position;
+	direction = glm::normalize(direction);
+	properties.spotDirection = direction;
+	properties.spotCosCutoff = cosCutoff;
+	properties.type = 1;
+}
+
+void Light::directionalLight(glm::vec3 direction)
+{
+	properties.position = glm::vec4(direction, 1);
+	properties.type = 2;
+}
+
+void Light::bufferData(char* buffer, int* offsets)
+{
+	int offset;
+	offset = offsets[0];
+	for(int i = 0; i < 4; ++i)
+	{
+		*(reinterpret_cast<float*>(&buffer[0] + offset)) = 
+			properties.position[i];
+		offset += sizeof(GLfloat);
+	}
+
+	offset = offsets[1];
+	for(int i = 0; i < 4; ++i)
+	{
+		*(reinterpret_cast<float*>(&buffer[0] + offset)) = 
+			properties.ambient[i];
+		offset += sizeof(GLfloat);
+	}
+
+	offset = offsets[2];
+	for(int i = 0; i < 4; ++i)
+	{
+		*(reinterpret_cast<float*>(&buffer[0] + offset)) = 
+			properties.diffuse[i];
+		offset += sizeof(GLfloat);
+	}
+
+	offset = offsets[3];
+	for(int i = 0; i < 4; ++i)
+	{
+		*(reinterpret_cast<float*>(&buffer[0] + offset)) = 
+			properties.specular[i];
+		offset += sizeof(GLfloat);
+	}
+
+	offset = offsets[4];
+	*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+		properties.constAttenuation;
+
+	offset = offsets[5];
+	*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+		properties.linearAttentuation;
+
+	offset = offsets[6];
+	*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+			properties.quadraticAttentuation;
+
+	offset = offsets[7];
+	for (int i = 0; i < 3; ++i)
+	{
+		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+			properties.spotDirection[i];
+		offset += sizeof (GLfloat);
+	}
+
+	offset = offsets[8];
+	*(reinterpret_cast<float*> (&buffer[0] + offset)) =
+		properties.spotCosCutoff;
+
+	offset = offsets[9];
+	*(reinterpret_cast<int*> (&buffer[0] + offset)) = 
+		properties.type;
 }
 
 void copyAiMatrixToGLM(const aiMatrix4x4 *from, glm::mat4 &to)
@@ -304,6 +378,48 @@ void renderNode::initFromRenderNode(aiNode* child, std::vector<Mesh*> meshes)
 	printf("translate x%f y%f z%f\n", transform.x, transform.y, transform.z);
 	//get scale
 	transform = glm::vec4(1,0,0,1);
+
+	float scale = 1;
+	transform = assMatrix * transform;
+	scale = glm::length(glm::vec3(transform.x, transform.y, transform.z) - this->transform.translation)/scale;
+	this->transform.scale *= scale;
+	printf("scale is %f\n", scale);
+
+	glm::mat4 rotationMatrix = glm::translate(assMatrix, this->transform.translation * (-1.0f));
+
+	rotationMatrix = glm::scale(rotationMatrix, glm::vec3(1/scale));
+
+	glm::quat rotation = glm::quat_cast(rotationMatrix);
+		/*transform -= glm::vec4(this->transform.translation,1);
+		transform2 -= glm::vec4(this->transform.translation,1);
+
+		float angx = transform.x/(std::sqrt(std::pow(transform.x,2) + std::pow(transform.z,2));
+		float angy = 
+
+		glm::vec3 v(1.0f,0.0f,0.0f);
+		glm::vec3 u(transform.x, transform.y, transform.z);
+		*/
+		/*
+		float cos_theta = glm::dot(glm::normalize(u), glm::normalize(v));
+		float angle = glm::acos(cos_theta);
+		glm::vec3 w = glm::normalize(glm::cross(u,v));
+		glm::quat rotation(angle,w);
+		glm::quat
+		*/
+		/*
+		glm::vec3 w = glm::cross(u, v);
+		glm::quat q = glm::quat(1.f + glm::dot(u, v), w.x, w.y, w.z);
+		glm::fquat rotation(glm::normalize(q));*/
+
+
+
+//	glm::fquat rotation(glm::vec3(transform.x,transform.y,transform.z), glm::vec3(1,0,0));
+	this->transform.orientation = rotation;
+
+	
+
+	
+	
 }
 
 bool renderNode::setProgram(renderProgram* program)
@@ -327,7 +443,7 @@ void renderNode::setTexture(std::string name, std::string texturename)
 		}
 	}
 
-	printf("Cannot find correct texture\n");
+	printf("Cannot find correct texture %s\n", texturename.c_str());
 }
 
 void renderNode::Render()
@@ -454,7 +570,7 @@ renderProgram::renderProgram(std::string name, char* vertex_file_path, char* fra
 			printf("added texture %s\n", newtex.name.c_str());
 		}
 	}
-
+	glUseProgram(0);
 	
 }
 renderProgram::~renderProgram()
@@ -483,7 +599,7 @@ void renderProgramID::toString()
 	}
 }
 
-void renderProgramID::Render(Camera* cam, int num_lights)
+void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 {
 	glUseProgram(program->programID);
 
@@ -500,7 +616,55 @@ void renderProgramID::Render(Camera* cam, int num_lights)
 
 	glUniformMatrix4fv(ViD, 1, GL_FALSE, glm::value_ptr(View));
 
-	
+	char* names[] = {
+		"DepthBiasMVP[0]",
+		"DepthBiasMVP[1]",
+		"DepthBiasMVP[2]",
+		"DepthBiasMVP[3]",
+		"DepthBiasMVP[4]",
+		"DepthBiasMVP[5]",
+		"DepthBiasMVP[6]",
+		"DepthBiasMVP[7]",
+		"DepthBiasMVP[8]",
+		"DepthBiasMVP[9]",
+	};
+
+
+	char* shadowNames[] = {
+		"shadowTextures[0]",
+		"shadowTextures[1]",
+		"shadowTextures[2]",
+		"shadowTextures[3]",
+		"shadowTextures[4]",
+		"shadowTextures[5]",
+		"shadowTextures[6]",
+		"shadowTextures[7]",
+		"shadowTextures[8]",
+		"shadowTextures[9]",
+	};
+
+	glm::mat4 biasMatrix(
+		0.5, 0.0, 0.0, 0.0,
+		0.0, 0.5, 0.0, 0.0,
+		0.0, 0.0, 0.5, 0.0,
+		0.5, 0.5, 0.5, 1.0
+	);
+
+	for(int i = 0; i < 10; ++i)
+	{
+		if(lights[i].shadow&&lights[i].active)
+		{
+			GLuint lightLoc = glGetUniformLocation(program->programID, names[i]);
+			glUniform4fv(lightLoc, 1, glm::value_ptr(lights[i].depthVP * biasMatrix));
+			
+			glActiveTexture(GL_TEXTURE0 + 3 + i);
+			glBindTexture(GL_TEXTURE_2D, lights[i].shadowTexture);
+
+			GLuint shadowLoc = glGetUniformLocation(program->programID, shadowNames[i]);
+			glUniform1i(shadowLoc, 3+i);
+		}
+	}
+
 	for(int i = 0, e = this->childNodes.size(); i < e; ++i)
 	{
 
@@ -622,7 +786,7 @@ Vertex::Vertex(glm::vec3 position, glm::vec2 uv, glm::vec3 normal):position(posi
 }
 
 
-Scene::Scene(RenderSys* parent):parentSys(parent)
+Scene::Scene(RenderSys* parent):parentSys(parent),active_Lights_num(0)
 {
 	this->renderables.reserve(20);
 	this->getRenderProgram("Standard");
@@ -630,7 +794,7 @@ Scene::Scene(RenderSys* parent):parentSys(parent)
 	printf("initialization capacity %d\n", renderables.capacity());
 }
 
-Scene::Scene(RenderSys* parent, char* filepath):parentSys(parent)
+Scene::Scene(RenderSys* parent, char* filepath):parentSys(parent),active_Lights_num(0)
 {
 	this->renderables.reserve(20);
 	this->getRenderProgram("Standard");
@@ -701,6 +865,7 @@ void Scene::generateLightBlock()
 		"Lights.light[0].spot_direction",
 		"Lights.light[0].spot_cutoff",
 		"Lights.light[0].spot_exponent",
+		"Lights.light[0].type",
 		"Lights.light[1].position",
 		"Lights.light[1].ambient",
 		"Lights.light[1].diffuse",
@@ -711,6 +876,7 @@ void Scene::generateLightBlock()
 		"Lights.light[1].spot_direction",
 		"Lights.light[1].spot_cutoff",
 		"Lights.light[1].spot_exponent",
+		"Lights.light[1].type",
 		"Lights.light[2].position",
 		"Lights.light[2].ambient",
 		"Lights.light[2].diffuse",
@@ -721,6 +887,7 @@ void Scene::generateLightBlock()
 		"Lights.light[2].spot_direction",
 		"Lights.light[2].spot_cutoff",
 		"Lights.light[2].spot_exponent",
+		"Lights.light[2].type",
 		"Lights.light[3].position",
 		"Lights.light[3].ambient",
 		"Lights.light[3].diffuse",
@@ -731,18 +898,85 @@ void Scene::generateLightBlock()
 		"Lights.light[3].spot_direction",
 		"Lights.light[3].spot_cutoff",
 		"Lights.light[3].spot_exponent",
+		"Lights.light[3].type",
+		"Lights.light[4].position",
+		"Lights.light[4].ambient",
+		"Lights.light[4].diffuse",
+		"Lights.light[4].specular",
+		"Lights.light[4].constant_attenuation",
+		"Lights.light[4].linear_attenuation",
+		"Lights.light[4].quadratic_attenuation",
+		"Lights.light[4].spot_direction",
+		"Lights.light[4].spot_cutoff",
+		"Lights.light[4].spot_exponent",
+		"Lights.light[4].type",
+		"Lights.light[5].position",
+		"Lights.light[5].ambient",
+		"Lights.light[5].diffuse",
+		"Lights.light[5].specular",
+		"Lights.light[5].constant_attenuation",
+		"Lights.light[5].linear_attenuation",
+		"Lights.light[5].quadratic_attenuation",
+		"Lights.light[5].spot_direction",
+		"Lights.light[5].spot_cutoff",
+		"Lights.light[5].spot_exponent",
+		"Lights.light[5].type",
+		"Lights.light[6].position",
+		"Lights.light[6].ambient",
+		"Lights.light[6].diffuse",
+		"Lights.light[6].specular",
+		"Lights.light[6].constant_attenuation",
+		"Lights.light[6].linear_attenuation",
+		"Lights.light[6].quadratic_attenuation",
+		"Lights.light[6].spot_direction",
+		"Lights.light[6].spot_cutoff",
+		"Lights.light[6].spot_exponent",
+		"Lights.light[6].type",
+		"Lights.light[7].position",
+		"Lights.light[7].ambient",
+		"Lights.light[7].diffuse",
+		"Lights.light[7].specular",
+		"Lights.light[7].constant_attenuation",
+		"Lights.light[7].linear_attenuation",
+		"Lights.light[7].quadratic_attenuation",
+		"Lights.light[7].spot_direction",
+		"Lights.light[7].spot_cutoff",
+		"Lights.light[7].spot_exponent",
+		"Lights.light[7].type",
+		"Lights.light[8].position",
+		"Lights.light[8].ambient",
+		"Lights.light[8].diffuse",
+		"Lights.light[8].specular",
+		"Lights.light[8].constant_attenuation",
+		"Lights.light[8].linear_attenuation",
+		"Lights.light[8].quadratic_attenuation",
+		"Lights.light[8].spot_direction",
+		"Lights.light[8].spot_cutoff",
+		"Lights.light[8].spot_exponent",
+		"Lights.light[8].type",
+		"Lights.light[9].position",
+		"Lights.light[9].ambient",
+		"Lights.light[9].diffuse",
+		"Lights.light[9].specular",
+		"Lights.light[9].constant_attenuation",
+		"Lights.light[9].linear_attenuation",
+		"Lights.light[9].quadratic_attenuation",
+		"Lights.light[9].spot_direction",
+		"Lights.light[9].spot_cutoff",
+		"Lights.light[9].spot_exponent",
+		"Lights.light[9].type"
 	};
 
-	GLuint indices[40];
+	GLuint indices[110];
 
-	glGetUniformIndices(program, 40, names, indices);
+	glGetUniformIndices(program, 110, names, indices);
 
-	for(int i = 0; i < 40; ++i)
+	/*for(int i = 0; i < 110; ++i)
 	{
 		printf("Indice index %d with value %d\n",i, indices[i]);
-	}
+	}*/
 
-	std::vector<GLint> lightUniformOffsets (40);
+	std::vector<GLint> lightUniformOffsets (110);
 	
 	glGetActiveUniformsiv(program, lightUniformOffsets.size(), indices, GL_UNIFORM_OFFSET, &lightUniformOffsets[0]);
 
@@ -754,76 +988,80 @@ void Scene::generateLightBlock()
 
 	int offset;
 
-	printf("R is %f b is %f g is %f\n", lights[0]->diffuse[0], lights[0]->diffuse[1], lights[0]->diffuse[2]);
+
 	
-	for(int i = 0; i < 40;++i)
+	/*(for(int i = 0; i < 110;++i)
 	{
 		printf("offset for index %d is %d\n", i, offsets[i]);
 	}
-
-	for(unsigned int n = 0, e = lights.size(); n < e; ++n)
+	*/
+	for(unsigned int n = 0, e = 10; n < e; ++n)
 	{
 		printf("lighting it up\n");
 		// Light position (vec4)
-		offset = offsets[0 + n * 10];
+		offset = offsets[0 + n * 11];
 		for (int i = 0; i < 4; ++i)
 		{
 			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->position[i];
+				lights[n].properties.position[i];
 			offset += sizeof (GLfloat);
 		}
 		// Light ambient color (vec4)
-		offset = offsets[1 + n * 10];
+		offset = offsets[1 + n * 11];
 		for (int i = 0; i < 4; ++i)
 		{
 			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->ambient[i];
+				lights[n].properties.ambient[i];
 			offset += sizeof (GLfloat);
 		}
 		// Light diffuse color (vec4)
-		offset = offsets[2 + n * 10];
+		offset = offsets[2 + n * 11];
 		for (int i = 0; i < 4; ++i)
 		{
 			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->diffuse[i];
+				lights[n].properties.diffuse[i];
 			offset += sizeof (GLfloat);
 		}
 		// Light specular color (vec4)
-		offset = offsets[3 + n * 10];
+		offset = offsets[3 + n * 11];
 		for (int i = 0; i < 4; ++i)
 		{
 			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->specular[i];
+				lights[n].properties.specular[i];
 			offset += sizeof (GLfloat);
 		}
 		// Light constant attenuation (float)
-		offset = offsets[4 + n * 10];
+		offset = offsets[4 + n * 11];
 		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->constAttenuation;
+				lights[n].properties.constAttenuation;
 		// Light linear attenuation (float)
-		offset = offsets[5 + n * 10];
+		offset = offsets[5 + n * 11];
 		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->linearAttentuation;
+				lights[n].properties.linearAttentuation;
 		// Light quadratic attenuation (float)
-		offset = offsets[6 + n * 10];
+		offset = offsets[6 + n * 11];
 		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->quadraticAttentuation;
+				lights[n].properties.quadraticAttentuation;
 		// Light spot direction (vec3)
-		offset = offsets[7 + n * 10];
+		offset = offsets[7 + n * 11];
 		for (int i = 0; i < 3; ++i)
 		{
 			*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->spotDirection[i];
+				lights[n].properties.spotDirection[i];
 			offset += sizeof (GLfloat);
 		}
 		// Light spot cutoff (float)
-		offset = offsets[8 + n * 10];
+		offset = offsets[8 + n * 11];
 		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->spotCosCutoff;
+				lights[n].properties.spotCosCutoff;
 		// Light spot exponent (float)
-		offset = offsets[9 + n * 10];
+		offset = offsets[9 + n * 11];
 		*(reinterpret_cast<float*> (&buffer[0] + offset)) =
-				lights[n]->spotExponent;
+			lights[n].properties.spotExponent;
+
+		offset = offsets[10+n*11];
+		*(reinterpret_cast<int*> (&buffer[0] + offset)) = 
+			lights[n].properties.type;
 	}
 	glBufferData(GL_UNIFORM_BUFFER, uboSize, &buffer[0], GL_DYNAMIC_DRAW);
 	glBindBufferBase(GL_UNIFORM_BUFFER, 0, light_ubo);
@@ -835,7 +1073,6 @@ void Scene::generateLightBlock()
 		uniformBlockIndex = glGetUniformBlockIndex(program, "Lights");
 		glUniformBlockBinding(program, uniformBlockIndex, 0);
 	}
-	initializeShadowMap();
 }
 
 transformNode* Scene::addRenderNodesFromAiNodes(aiNode* child, std::vector<Mesh*> meshes)
@@ -912,7 +1149,7 @@ void Scene::Render(int index)
 
 	for(int i = 0, e = programs.size(); i < e; ++i)
 	{
-		programs[i].Render(cameras[index], lights.size());
+		programs[i].Render(cameras[index], active_Lights_num, lights);
 	}
 }
 
@@ -930,30 +1167,31 @@ void Scene::getRenderProgram(std::string name)
 	this->programs.push_back(renderProgramID(parentSys->getProgram(name)));
 }
 
-void Scene::initializeShadowMap()
+void Scene::initializeShadowMap(int lightIndex)
 {
 	glGenFramebuffers(1,&shadowMapFrameBuffer);
 	glBindFramebuffer(GL_FRAMEBUFFER, shadowMapFrameBuffer);
 
-	for (int i = 0; i < lights.size(); i++)
+	glGenTextures(1, &lights[lightIndex].shadowTexture);
+	glBindTexture(GL_TEXTURE_2D, lights[lightIndex].shadowTexture);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT16, 1024,1024,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lights[lightIndex].shadowTexture,0);
+	glDrawBuffer(GL_NONE);
+
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
 	{
-		glGenTextures(1, &lights[i]->shadowTexture);
-		glBindTexture(GL_TEXTURE_2D, lights[0]->shadowTexture);
-		glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT16, 1024,1024,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lights[i]->shadowTexture,0);
-		glDrawBuffer(GL_NONE);
-
-		if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
-		{
-			printf("shadowInitialization error!!!!!");
-			return;
-		}
+		printf("shadowInitialization error!!!!!\n");
+		return;
 	}
+	glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+	
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 
@@ -963,34 +1201,39 @@ void Scene::generateShadow()
 
 	GLuint depthMatrixID = glGetUniformLocation(shadowProgram->programID, "depthMVP");
 
-	glm::vec3 pointLightDir = glm::vec3(0,0,0);
-
 	GLuint program = shadowProgram->programID;
-
-	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
-
 
 	glBindFramebuffer(GL_FRAMEBUFFER, this->shadowMapFrameBuffer);
 
-	for(int i = 0, e = lights.size(); i < e; ++i)
+	for(int i = 0, e = 10; i < e; ++i)
 	{
-		glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lights[i]->shadowTexture,0);
-
-		glDrawBuffer(GL_NONE);
-
-		for(int j = 0, je = renderables.size(); j < je; ++j)
+		if(lights[i].shadow && lights[i].properties.type == 2)
 		{
-			glm::mat4 depthViewMatrix = glm::lookAt(glm::vec3(lights[i]->position.x,lights[i]->position.y,lights[i]->position.z),glm::vec3(0,0,0),glm::vec3(0,1,0));
-			glm::mat4 depthModelMatrix = renderables[j].transform.transformMatrix;
-			glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-	
-			glUniformMatrix4fv(program, 1,GL_FALSE, glm::value_ptr(depthMVP));
+			glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, lights[i].shadowTexture,0);
 
-			for(int k = 0, ke = renderables[j].meshes.size(); k < ke; ++k)
+			glDrawBuffer(GL_NONE);
+
+			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+			glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
+			glm::mat4 depthViewMatrix = glm::lookAt(glm::vec3(lights[i].properties.position.x,lights[i].properties.position.y,lights[i].properties.position.z),glm::vec3(0,0,0),glm::vec3(0,1,0));
+			lights[i].depthVP = depthProjectionMatrix * depthViewMatrix;
+			for(int j = 0, je = renderables.size(); j < je; ++j)
 			{
-				glBindVertexArray(renderables[j].meshes[k]->VAO);
 
-				glDrawElements(GL_TRIANGLES, renderables[j].meshes[k]->indices.size(), GL_UNSIGNED_INT, 0);
+				glm::mat4 depthModelMatrix = renderables[i].transform.transformMatrix;
+				glm::mat4 depthMVP = lights[i].depthVP * depthModelMatrix;
+
+
+				glUniformMatrix4fv(depthMatrixID, 1,GL_FALSE, glm::value_ptr(depthMVP));
+
+
+				for(int k = 0, ke = renderables[j].meshes.size(); k < ke; ++k)
+				{
+					glBindVertexArray(renderables[j].meshes[k]->VAO);
+
+					glDrawElements(GL_TRIANGLES, renderables[j].meshes[k]->indices.size(), GL_UNSIGNED_INT, 0);
+				}
 			}
 		}
 	}
@@ -999,39 +1242,98 @@ void Scene::generateShadow()
 
 void Scene::testShadowMap()
 {
+	root.calculateAllMatrices();
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	glUseProgram(shadowProgram->programID);
 
 	GLuint depthMatrixID = glGetUniformLocation(shadowProgram->programID, "depthMVP");
 
 	if(depthMatrixID == -1)
 	{
-	//	printf("error");
+		printf("error");
 	}
 
-	glm::vec3 pointLightDir = glm::vec3(0,0,0);
+	glm::vec3 pointLightDir = glm::vec3(0.5f,2,2);
 
 	GLuint program = shadowProgram->programID;
 
 	glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
 
-	for(int i = 0, e = lights.size(); i < e; ++i)
+	glm::mat4 depthViewMatrix = glm::lookAt(pointLightDir,glm::vec3(0,0,0),glm::vec3(0,1,0));
+	glm::mat4 depthModelMatrix = glm::mat4(1.0f);
+	depthModelMatrix = glm::scale(depthModelMatrix,glm::vec3(0.02,0.02,0.02));
+	glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
+	glUniformMatrix4fv(program, 1,GL_FALSE, glm::value_ptr(depthMVP));
+
+
+	for(int j = 0, je = renderables.size(); j < je; ++j)
 	{
 
-		for(int j = 0, je = renderables.size(); j < je; ++j)
+		for(int k = 0, ke = renderables[j].meshes.size(); k < ke; ++k)
 		{
-			glm::mat4 depthViewMatrix = cameras[0]->getView();
-			glm::mat4 depthModelMatrix = renderables[j].transform.transformMatrix;
-			glm::mat4 depthMVP = depthProjectionMatrix * depthViewMatrix * depthModelMatrix;
-	
-			glUniformMatrix4fv(program, 1,GL_FALSE, glm::value_ptr(depthMVP));
-
-			for(int k = 0, ke = renderables[j].meshes.size(); k < ke; ++k)
-			{
-				glBindVertexArray(renderables[j].meshes[k]->VAO);
-				glDrawElements(GL_TRIANGLES, renderables[j].meshes[k]->indices.size(), GL_UNSIGNED_INT, 0);
-			}
+			glBindVertexArray(renderables[j].meshes[k]->VAO);
+			glDrawElements(GL_TRIANGLES, renderables[j].meshes[k]->indices.size(), GL_UNSIGNED_INT, 0);
 		}
 	}
+}
+
+void Scene::activateShadow(std::string name)
+{
+	for(int i = 0; i < 10; ++i)
+	{
+		if(name == lights[i].name)
+		{
+			lights[i].shadow = true;
+			initializeShadowMap(i);
+		}
+	}
+}
+
+Light* Scene::activateLight(int index, std::string name)
+{
+	lights[index].name = name;
+	lights[index].active = true;
+	this->active_Lights_num++;
+	printf("Light activated!!\n");
+	return &lights[index];
+}
+
+void Scene::deactivateLight(int index)
+{
+	lights[index].name = std::string();
+	lights[index].active = false;
+}
+
+Light* Scene::addSpotLight(std::string name, glm::vec3 position, glm::vec3 target, float cosCutoff)
+{
+	for(int i = 0; i < 10; ++i)
+	{
+		if(lights[i].active!=true)
+		{
+			Light* light = activateLight(i, name);
+			light->spotLight(position, target, cosCutoff);
+			return light;
+		}
+	}
+
+	printf("Out of lights!!\n");
+	return NULL;
+}
+
+Light* Scene::addDirectionalLight(std::string name, glm::vec3 direction)
+{
+	for(int i = 0; i < 10; ++i)
+	{
+		if(lights[i].active!=true)
+		{
+			Light* light = activateLight(i, name);
+			light->directionalLight(direction);
+			return light;
+		}
+	}
+
+	printf("Out of lights!!\n");
+	return NULL;
 }
 
 RenderSys::RenderSys()
@@ -1069,6 +1371,8 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 
 	this->createNewProgram("Standard", "./shaders/Blinn.vert", "./shaders/Blinn.frag");
 	this->createNewProgram("Shadow", "./shaders/shadow.vert", "./shaders/shadow.frag");
+	this->createNewProgram("2D", "./shaders/image.vert","./shaders/image.frag");
+	init2D();
 	return true;
 }
 
@@ -1162,6 +1466,76 @@ Mesh* RenderSys::createNewMesh(std::string mesh)
 {
 	meshes.push_back(Mesh(mesh));
 	return &meshes.back();
+}
+
+void RenderSys::init2D()
+{
+	GLuint vertex2d, uv,indices;
+	glGenVertexArrays(1, &VAO2d);
+	glGenBuffers(1, &vertex2d);
+	glGenBuffers(1, &uv);
+	glGenBuffers(1, &indices);
+
+	glBindVertexArray(VAO2d);
+
+	float vertices[] = {
+		-1.0, 1.0,
+		-1.0,-1.0,
+		1.0,-1.0,
+		1.0,1.0
+	};
+
+	float uvs[] = {
+		0.0,0.0,
+		0.0,1.0,
+		1.0,1.0,
+		1.0,0.0
+	};
+
+	unsigned int indice[] = {
+		0,1,2,0,2,3
+	};
+
+	glBindBuffer(GL_ARRAY_BUFFER, vertex2d);
+	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), vertices, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 0, 0);
+	
+	glBindBuffer(GL_ARRAY_BUFFER, uv);
+	glBufferData(GL_ARRAY_BUFFER, 8*sizeof(float), uvs, GL_STATIC_DRAW);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 0, 0);
+
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indices);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, 6*sizeof(unsigned int), indice, GL_STATIC_DRAW);
+
+	glBindVertexArray(0);
+	
+	glDeleteBuffers(1, &vertex2d);
+	glDeleteBuffers(1, &uv);
+	glDeleteBuffers(1, &indices);
+}
+
+void RenderSys::DrawTextureRect(Texture* texture, float x, float y, float width, float height)
+{
+	renderProgram* prog2D = getProgram("2D");
+	if(prog2D == NULL)
+	{
+		printf("lol\n");
+	}
+	glUseProgram(prog2D->programID);
+	glBindVertexArray(VAO2d);
+
+	glActiveTexture(GL_TEXTURE0 + 0);
+	glBindTexture(GL_TEXTURE_2D, texture->textureID);
+
+	GLuint textureLoc = glGetUniformLocation(prog2D->programID, "myTexture");
+	glUniform1i(textureLoc, 0);
+
+
+	
+	glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+	glBindVertexArray(0);
 }
 
 CanvasWindow::CanvasWindow(int x, int y, int width, int height, int flags):x(x), y(y), width(width), height(height)

@@ -1,6 +1,8 @@
-#include "Externals.h"
+﻿#include "Externals.h"
 #include "RenderSystem.h"
 #include <cmath>
+
+const float PI = 3.14159265;
 
 using namespace Canvas;
 
@@ -75,6 +77,7 @@ void computeMatrix(fpsCamera* cam)
 	{
 		cam->position.y -= 2*timeSeconds*multiplier;
 	}
+
 }
 
 void computeMatrix(glm::mat4* view)
@@ -100,7 +103,6 @@ void computeMatrix(glm::mat4* view)
 	glm::vec3 directionRight(std::sin(horAngle-3.14f/2.0f),
 							 0,
 							 std::cos(horAngle-3.14f/2.0f));
-	printf("%d\n", deltaTime);
 
 	float timeSeconds = (float)deltaTime/1000.0f;
 	if(accelerate)
@@ -142,17 +144,16 @@ int main(int argc, char* args[])
 	Scene* myScene = window->renderer.createNewScene();
 
 	Texture* texture = window->renderer.createNewTexture("stuffffff");
-	texture->loadFile("dragon_knight.jpg");
 
-	std::vector<Mesh*> meshes = myScene->loadFromFile("test2.obj");
+
+	std::vector<Mesh*> meshes = myScene->loadFromFile("dk.3ds");
 	fpsCamera mycam(45.0f, 4.0f/3.0f, glm::vec3(0,0,0));
 	myScene->cameras.push_back(&mycam);
-	printf("Mesh number %d\n", meshes.size());
-	for(int i = 0, e = meshes.size(); i < e; ++i)
-	{
-		printf("Mesh vao is %d\n", meshes[i]->VAO);
-	}
-	/*auto bodyTexture = window->renderer.createNewTexture("Body");
+	glEnable(GL_DEPTH_TEST);
+	glDepthFunc(GL_LESS);
+	glEnable(GL_CULL_FACE);
+	glCullFace(GL_BACK);
+	auto bodyTexture = window->renderer.createNewTexture("Body");
 
 	bodyTexture->loadFile("dragon_knight.jpg");
 
@@ -184,17 +185,235 @@ int main(int argc, char* args[])
 	window->renderer.createNewTexture("shield")->loadFile("shield_color.jpg");
 
 	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");
-	*/
-	pointLight light(0.0f,10.0f,5.0f);
 	
-	
-	pointLight light2(1.5f,0.0f,0.0f);
+	Light* lol = myScene->addDirectionalLight("Light1", glm::vec3(2,2,0));
+	myScene->activateShadow("Light1");
 
-	myScene->lights.push_back(&light);
-	myScene->lights.push_back(&light2);
+	Texture* text = window->renderer.createNewTexture("Hello");
+
+	
+
+	myScene->root.orientation = glm::fquat(glm::vec3(-PI/2.0f,0.0f,0.0f)) * myScene->root.orientation  ;
+	//Shadow map code
+	/*GLuint frameBuffer = 0;
+	glGenFramebuffers(1, &frameBuffer);
+	glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer);
+
+	printf("Framebuffer %d\n", frameBuffer);
+
+	texturelol->textureID = 0;
+
+	glGenTextures(1, &texturelol->textureID);
+	glBindTexture(GL_TEXTURE_2D, texturelol->textureID);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT, 1024,1024,0,GL_DEPTH_COMPONENT,GL_FLOAT,NULL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_NONE );
+	glTexParameteri( GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_LUMINANCE );
+
+	glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, texturelol->textureID, 0);
+
+
+
+	glDrawBuffer(GL_NONE);
+
+	GLenum status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+
+	if(status != GL_FRAMEBUFFER_COMPLETE)
+	{
+		printf("Framebuffer error status = 0x%x\n", status);
+	}
+
+
+	GLuint colorframe = 0;
+	glGenFramebuffers(1, &colorframe);
+	glBindFramebuffer(GL_FRAMEBUFFER, colorframe);
+
+	glGenTextures(1, &texturelol->textureID);
+	glBindTexture(GL_TEXTURE_2D, texturelol->textureID);
+
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, 1200, 900, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_FUNC, GL_LEQUAL);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_COMPARE_MODE, GL_COMPARE_R_TO_TEXTURE);
+
+	
+	glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, texturelol->textureID, 0);
+	
+	GLenum DrawBuffers[1] = {GL_COLOR_ATTACHMENT0};
+
+	glDrawBuffer(GL_NONE);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	// Always check that our framebuffer is ok
+	if(glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+	{
+		return false;
+	}
+
+
+
 
 	myScene->generateLightBlock();
-	myScene->generateShadow();
+
+	
+
+
+	texture->loadFile("dragon_knight.jpg");
+
+	myScene->root.scale = glm::vec3(0.02,0.02,0.02);
+
+	renderProgram* program = window->renderer.createNewProgram("image", "./shaders/shadow.vert", "./shaders/shadow.frag");
+	
+	glUseProgram(program->programID);
+
+	GLuint mvpLocation = glGetUniformLocation(program->programID, "depthMVP");
+
+	if(mvpLocation == -1)
+	{
+		printf("error");
+	}
+
+	glm::mat4 Model(1.0f);
+
+	Model = glm::scale(Model, glm::vec3(0.02,0.02,0.02));
+
+	glm::mat4 Perspective = glm::ortho<float>(-10, 10, -10, 10, -10, 20 );
+
+	glm::mat4 View = glm::lookAt(glm::vec3(3,4,3), glm::vec3(0,0,0), glm::vec3(0,1,0));
+
+
+	glBindVertexArray(window->renderer.meshes[0].VAO);
+	
+	*/
+	myScene->generateLightBlock();
+	bool turnoff = false;
+	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+	while(!quit)
+	{
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+		SDL_Event e;
+		while(SDL_PollEvent(&e) > 0)
+		{
+			if(e.type == SDL_QUIT)
+			{
+				quit = true;
+			}
+			if(e.type == SDL_KEYDOWN)
+			{
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_w:
+						Up = true;
+						break;
+					case SDLK_s:
+						Down = true;
+						break;
+					case SDLK_a:
+						Left = true;
+						break;
+					case SDLK_d:
+						Right = true;
+						break;
+					case SDLK_q:
+						quit = true;
+						break;
+					case SDLK_x:
+						ShiftUp = true;
+						break;
+					case SDLK_z:
+						ShiftDown = true;
+						break;
+					case SDLK_LSHIFT:
+						accelerate = true;
+						break;
+					case SDLK_e:
+						turnoff = true;
+				}
+			}
+			if(e.type == SDL_KEYUP)
+			{
+				switch(e.key.keysym.sym)
+				{
+					case SDLK_w:
+						Up = false;
+						break;
+					case SDLK_s:
+						Down = false;
+						break;
+					case SDLK_a:
+						Left = false;
+						break;
+					case SDLK_d:
+						Right = false;
+						break;
+					case SDLK_x:
+						ShiftUp = false;
+						break;
+					case SDLK_z:
+						ShiftDown = false;
+						break;
+					case SDLK_LSHIFT:
+						accelerate = false;
+				}
+			}
+		}
+
+
+
+		if(!turnoff)
+		{
+			computeMatrix(&mycam);
+			SDL_WarpMouseInWindow(window->windowHandler, 1200/2, 900/2);
+		}
+		myScene->Render();
+
+		text->textureID = lol->shadowTexture;
+		window->renderer.DrawTextureRect(text);
+		/*
+		glm::mat4 MVP = Perspective * View * Model;
+
+		glBindFramebuffer(GL_FRAMEBUFFER, colorframe);
+		glUseProgram(program->programID);
+		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
+
+		glUniformMatrix4fv(mvpLocation, 1, GL_FALSE, glm::value_ptr(MVP));
+		for(int i = 0; i < window->renderer.meshes.size(); ++i)
+		{
+			glBindVertexArray(window->renderer.meshes[i].VAO);
+			glDrawElements(GL_TRIANGLES, window->renderer.meshes[i].indices.size(), GL_UNSIGNED_INT, 0);
+		}
+		//myScene->Render();
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		window->renderer.DrawTextureRect(texturelol);
+
+		*/
+		/*
+		glm::mat4 MVP = Perspect  * View * Model;
+		glUniformMatrix4fv(MVPID, 1, GL_FALSE, glm::value_ptr(MVP));
+		glUniformMatrix4fv(VID,1,GL_FALSE, glm::value_ptr(View));
+		glUniformMatrix4fv(MID,1,GL_FALSE, glm::value_ptr(Model));
+		
+		glDrawElements(GL_TRIANGLES, newMesh.indices.size(), GL_UNSIGNED_INT, 0);
+		*/
+
+		SDL_GL_SwapWindow(window->windowHandler);
+
+
+
+
+	}
+}
+
 	//renderProgram firstProgram("first_program", "./shaders/first.vert", "./shaders/first.frag", &window->renderer);
 	//glUseProgram(firstProgram.programID);
 	/*
@@ -270,152 +489,3 @@ int main(int argc, char* args[])
 	glm::mat4 MVP = Perspect  * View * Model;
 
 	glBindVertexArray(newMesh.VAO);*/
-	
-	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LESS);
-	glCullFace(GL_BACK);
-
-	myScene->root.scale = glm::vec3(0.02,0.02,0.02);
-
-	renderProgram* program = window->renderer.createNewProgram("image", "./shaders/image.vert", "./shaders/image.frag");
-	
-	glUseProgram(program->programID);
-
-	float vertices[] = {
-		-1.0, 1.0,
-		-1.0, -1.0,
-		 1.0, -1.0,
-		 1.0, 1.0
-	};
-
-	unsigned int indices[] = {
-		1,2,3,1,3,4
-	};
-
-	float uv[] = 
-	{
-		0.0,0.0,
-		0.0,1.0,
-		1.0,1.0,
-		1.0,0.0
-	};
-
-	GLuint VAO, indiceBuffer, uvBuffer, verticeBuffer;
-
-	glGenVertexArrays(1,&VAO);
-	glBindVertexArray(VAO);
-
-	glGenBuffers(1,&verticeBuffer);
-	glGenBuffers(1, &uvBuffer);
-	glGenBuffers(1, &indiceBuffer);
-
-	glBindBuffer(GL_ARRAY_BUFFER, verticeBuffer);
-	glEnableVertexAttribArray(0);
-	glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), vertices, GL_STATIC_DRAW);
-	glVertexAttribPointer(0,2,GL_FLOAT,GL_FALSE,0,0);
-
-	glBindBuffer(GL_ARRAY_BUFFER, uvBuffer);
-	glEnableVertexAttribArray(1);
-	glBufferData(GL_ARRAY_BUFFER, 8 * sizeof(float), uv, GL_STATIC_DRAW);
-	glVertexAttribPointer(1,2,GL_FLOAT,GL_FALSE,0,0);
-
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, indiceBuffer);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER,6*sizeof(unsigned int),indices,GL_STATIC_DRAW);
-
-	GLuint texturelocation = glGetUniformLocation(program->programID, "myTexture");
-
-	bool turnoff = false;
-	while(!quit)
-	{
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		SDL_Event e;
-		while(SDL_PollEvent(&e) > 0)
-		{
-			if(e.type == SDL_QUIT)
-			{
-				quit = true;
-			}
-			if(e.type == SDL_KEYDOWN)
-			{
-				switch(e.key.keysym.sym)
-				{
-					case SDLK_w:
-						Up = true;
-						break;
-					case SDLK_s:
-						Down = true;
-						break;
-					case SDLK_a:
-						Left = true;
-						break;
-					case SDLK_d:
-						Right = true;
-						break;
-					case SDLK_q:
-						quit = true;
-						break;
-					case SDLK_x:
-						ShiftUp = true;
-						break;
-					case SDLK_z:
-						ShiftDown = true;
-						break;
-					case SDLK_LSHIFT:
-						accelerate = true;
-						break;
-					case SDLK_e:
-						turnoff = true;
-				}
-			}
-			if(e.type == SDL_KEYUP)
-			{
-				switch(e.key.keysym.sym)
-				{
-					case SDLK_w:
-						Up = false;
-						break;
-					case SDLK_s:
-						Down = false;
-						break;
-					case SDLK_a:
-						Left = false;
-						break;
-					case SDLK_d:
-						Right = false;
-						break;
-					case SDLK_x:
-						ShiftUp = false;
-						break;
-					case SDLK_z:
-						ShiftDown = false;
-						break;
-					case SDLK_LSHIFT:
-						accelerate = false;
-				}
-			}
-		}
-		if(!turnoff)
-		{
-			computeMatrix(&mycam);
-			SDL_WarpMouseInWindow(window->windowHandler, 1200/2, 900/2);
-		}
-		myScene->Render();
-
-		myScene->testShadowMap();
-
-		/*
-		glm::mat4 MVP = Perspect  * View * Model;
-		glUniformMatrix4fv(MVPID, 1, GL_FALSE, glm::value_ptr(MVP));
-		glUniformMatrix4fv(VID,1,GL_FALSE, glm::value_ptr(View));
-		glUniformMatrix4fv(MID,1,GL_FALSE, glm::value_ptr(Model));
-		
-		glDrawElements(GL_TRIANGLES, newMesh.indices.size(), GL_UNSIGNED_INT, 0);
-		*/
-
-		SDL_GL_SwapWindow(window->windowHandler);
-
-
-
-
-	}
-}

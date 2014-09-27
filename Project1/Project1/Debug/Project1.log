@@ -1,24 +1,25 @@
-﻿Build started 2014/9/20 18:23:54.
-     1>Project "C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Project1\Project1.vcxproj" on node 2 (Build target(s)).
+﻿Build started 9/27/2014 6:20:23 PM.
+     1>Project "C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Project1\Project1.vcxproj" on node 2 (Build target(s)).
      1>ClCompile:
          C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /ZI /nologo /W3 /WX- /sdl /Od /Oy- /D _MBCS /Gm /EHsc /RTC1 /MDd /GS /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Debug\\" /Fd"Debug\vc110.pdb" /Gd /TP /analyze- /errorReport:prompt Main.cpp
          Main.cpp
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(177): warning C4099: 'Canvas::renderNode' : type name first seen using 'class' now seen using 'struct'
-                 c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(12) : see declaration of 'Canvas::renderNode'
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(204): warning C4099: 'Canvas::Mesh' : type name first seen using 'class' now seen using 'struct'
-                 c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\rendersystem.h(10) : see declaration of 'Canvas::Mesh'
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(39): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(40): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(42): warning C4305: 'argument' : truncation from 'double' to 'float'
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(91): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(92): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
-     1>c:\users\administrator\documents\canvasengine_v0.01\canvasengine_v0.01\canvas3d\project1\project1\main.cpp(94): warning C4305: 'argument' : truncation from 'double' to 'float'
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\rendersystem.h(189): warning C4099: 'Canvas::renderNode' : type name first seen using 'class' now seen using 'struct'
+                 c:\users\weijin\documents\github\canvas3d\project1\project1\rendersystem.h(12) : see declaration of 'Canvas::renderNode'
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\rendersystem.h(216): warning C4099: 'Canvas::Mesh' : type name first seen using 'class' now seen using 'struct'
+                 c:\users\weijin\documents\github\canvas3d\project1\project1\rendersystem.h(10) : see declaration of 'Canvas::Mesh'
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(5): warning C4305: 'initializing' : truncation from 'double' to 'const float'
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(41): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(42): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(44): warning C4305: 'argument' : truncation from 'double' to 'float'
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(94): warning C4244: '+=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(95): warning C4244: '-=' : conversion from 'double' to 'float', possible loss of data
+     1>c:\users\weijin\documents\github\canvas3d\project1\project1\main.cpp(97): warning C4305: 'argument' : truncation from 'double' to 'float'
        Link:
-         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.exe" /INCREMENTAL /NOLOGO SDL2.lib SDL2main.lib SDL2_image.lib SDL2_ttf.lib glew32.lib opengl32.lib glu32.lib assimp.lib Dwmapi.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.lib" /MACHINE:X86 Debug\Main.obj
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\link.exe /ERRORREPORT:PROMPT /OUT:"C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Debug\Canvas3d.exe" /INCREMENTAL /NOLOGO SDL2.lib SDL2main.lib SDL2_image.lib SDL2_ttf.lib glew32.lib opengl32.lib glu32.lib assimp.lib Dwmapi.lib kernel32.lib user32.lib gdi32.lib winspool.lib comdlg32.lib advapi32.lib shell32.lib ole32.lib oleaut32.lib uuid.lib odbc32.lib odbccp32.lib /MANIFEST /MANIFESTUAC:"level='asInvoker' uiAccess='false'" /manifest:embed /DEBUG /PDB:"C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Debug\Canvas3d.pdb" /SUBSYSTEM:CONSOLE /TLBID:1 /DYNAMICBASE /NXCOMPAT /IMPLIB:"C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Debug\Canvas3d.lib" /MACHINE:X86 Debug\Main.obj
          Debug\RenderSystem.obj
-         Project1.vcxproj -> C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Debug\Canvas3d.exe
-     1>Done Building Project "C:\Users\Administrator\Documents\CanvasEngine_v0.01\CanvasEngine_v0.01\Canvas3D\Project1\Project1\Project1.vcxproj" (Build target(s)).
+         Project1.vcxproj -> C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Debug\Canvas3d.exe
+     1>Done Building Project "C:\Users\weijin\Documents\GitHub\Canvas3D\Project1\Project1\Project1.vcxproj" (Build target(s)).
 
 Build succeeded.
 
-Time Elapsed 00:00:02.60
+Time Elapsed 00:00:02.28

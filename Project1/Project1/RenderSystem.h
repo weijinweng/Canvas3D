@@ -19,7 +19,35 @@ namespace Canvas{
 		}
 	};
 
-	struct Light{
+	//Nodes of a transform Tree, the node memory are stored inside renderNodes
+	struct transformNode{
+		void calculateMatrix();
+	public:
+		//Attributes of transforms
+		glm::vec3 translation;
+		glm::vec3 scale;
+		glm::fquat orientation;
+		//Resultant matrix
+		glm::mat4 transformMatrix;
+		//Derived from assimp
+		glm::mat4 assimpMatrix;
+		//Node relationships
+		transformNode* parent;
+		std::vector<transformNode*> children;
+		transformNode();
+		//Tree modifiers
+		void setParent(transformNode* parent);
+		void addChild(transformNode* child);
+		void removeChild(transformNode* child);
+		void print(int level);
+		void print();
+		//Calculate down a transformTree
+		void calculateAllMatrices();
+		~transformNode();
+	};
+
+	struct LightProperties{
+		transformNode node;
 		glm::vec4 position;
 		glm::vec4 ambient;
 		glm::vec4 diffuse;
@@ -31,18 +59,27 @@ namespace Canvas{
 		glm::vec3 spotDirection;
 		float spotExponent;
 		float spotCosCutoff;
-		Light(CANVASENUM type);
+
+		LightProperties(glm::vec4 position, glm::vec4 ambient, glm::vec4 diffuse, glm::vec4 specular, float constAtten, float linAtten, float quadAtten);
+	};
+
+	struct Light{
+		Light();
+		LightProperties properties;
 		GLuint shadowTexture;
 		bool shadow;
-	};
-
-	struct spotLight{
-	};
-
-	struct pointLight:public Light{
-	public:
-		pointLight(float x, float y, float z, float constAtten = 1.0, float linAtten = 1.0, float quadAtten = 1.0);
-
+		std::string name;
+		glm::mat4 depthVP;
+		bool active;
+		void directionalLight();
+		void directionalLight(glm::vec3 position);
+		void spotLight(glm::vec3 position, glm::vec3 target, float cosCutOff);
+		void spotLight(float cosCutOff);
+		void changeAttenuation(int constAtten, int linAtten, int quadAtten);
+		void changeDiffuse(glm::vec4 diffuse);
+		void changeAmbient(glm::vec4 ambient);
+		void changeSpecular(glm::vec4 specular);
+		void bufferData(char* buffer, int* offset);
 	};
 
 	class Camera{
@@ -121,32 +158,7 @@ namespace Canvas{
 		~shaderTextureID();
 	};
 
-	//Nodes of a transform Tree, the node memory are stored inside renderNodes
-	struct transformNode{
-		void calculateMatrix();
-	public:
-		//Attributes of transforms
-		glm::vec3 translation;
-		glm::vec3 scale;
-		glm::fquat orientation;
-		//Resultant matrix
-		glm::mat4 transformMatrix;
-		//Derived from assimp
-		glm::mat4 assimpMatrix;
-		//Node relationships
-		transformNode* parent;
-		std::vector<transformNode*> children;
-		transformNode();
-		//Tree modifiers
-		void setParent(transformNode* parent);
-		void addChild(transformNode* child);
-		void removeChild(transformNode* child);
-		void print(int level);
-		void print();
-		//Calculate down a transformTree
-		void calculateAllMatrices();
-		~transformNode();
-	};
+
 
 	//GLSL shader program.
 	//Memory resides in parent Scene
@@ -166,7 +178,7 @@ namespace Canvas{
 		std::vector<renderNode*> childNodes;
 		renderProgramID(renderProgram* program);
 		void addNode(renderNode* node);
-		void Render(Camera* cam, int lightNum);
+		void Render(Camera* cam, int lightNum, Light* lights);
 		void toString();
 	};
 
@@ -230,9 +242,10 @@ namespace Canvas{
 	public:
 		GLuint shadowMapFrameBuffer;
 		GLuint light_ubo;
+		int active_Lights_num;
 		renderProgram* shadowProgram;
 		std::vector<Camera*> cameras;
-		std::vector<Light*> lights;
+		Light lights[10];
 		RenderSys* parentSys;
 		transformNode root;
 		std::vector<renderProgramID> programs;
@@ -245,14 +258,22 @@ namespace Canvas{
 		transformNode* addRenderNodesFromAiNodes(aiNode* child, std::vector<Mesh*> meshes);
 		transformNode* createNewNodeFromRenderNode(aiNode* child, std::vector<Mesh*> meshes);
 		renderNode* getNode(std::string nodeName);
+		//Generate our buffer.
 		void generateLightBlock();
 		void Render();
 		void Render(int index);
 		void getRenderProgram(std::string programName);
+		//Shadow functions.
 		void generateShadow();
-		void initializeShadowMap();
+		void initializeShadowMap(int index);
 		void setShadowShader(std::string name = "Shadow");
 		void testShadowMap();
+		void activateShadow(std::string name);
+		//Lighting functions.
+		Light* activateLight(int index, std::string name);
+		void deactivateLight(int index);
+		Light* addSpotLight(std::string name, glm::vec3 position, glm::vec3 target, float cosCutoff);
+		Light* addDirectionalLight(std::string name, glm::vec3 direction);
 		~Scene();
 	};
 
@@ -260,6 +281,7 @@ namespace Canvas{
 	class RenderSys: public Subsystem{
 	public:
 		//Memory management within the RenderSys
+		GLuint VAO2d;
 		SDL_GLContext glContext;
 		std::vector<Scene> scenes;
 		int maxMesh;
@@ -283,6 +305,8 @@ namespace Canvas{
 		renderProgram* getProgram(std::string name);
 		Texture* getTexture(std::string name);
 		std::vector<Mesh*> initMeshesFromAiScene(aiMesh** mesh, int meshCount);
+		void DrawTextureRect(Texture* texture, float x = 0, float y = 0, float width = 0, float height = 0);
+		void init2D();
 		~RenderSys();
 	};
 

@@ -12,6 +12,7 @@ uniform mat4   V;
 smooth out vec3 vPosition;
 smooth out vec3 vNormal;
 smooth out vec2 uv;
+smooth out vec3 mPosition;
  
 void main(void)
 {
@@ -28,4 +29,5 @@ void main(void)
     gl_Position = MVP * vec4(position, 1);
 	
 	uv = uvC;
+	vPosition = position;
 }
