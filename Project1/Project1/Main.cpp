@@ -186,7 +186,7 @@ int main(int argc, char* args[])
 
 	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");
 	
-	Light* lol = myScene->addDirectionalLight("Light1", glm::vec3(2,2,0));
+	Light* lol = myScene->addDirectionalLight("Light1", glm::vec3(1,1,0));
 	myScene->activateShadow("Light1");
 
 	Texture* text = window->renderer.createNewTexture("Hello");
@@ -376,8 +376,7 @@ int main(int argc, char* args[])
 		}
 		myScene->Render();
 
-		text->textureID = lol->shadowTexture;
-		window->renderer.DrawTextureRect(text);
+		
 		/*
 		glm::mat4 MVP = Perspective * View * Model;
 

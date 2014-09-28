@@ -22,7 +22,7 @@ layout(shared) uniform Lights
     Light light[10];
 } lights;
  
-Material
+struct Material
 {
     vec4    ambient;
     vec4    diffuse;
@@ -34,9 +34,9 @@ uniform int num_lights;
 
 uniform sampler2D myTextureSampler; 
 
-uniform sampler2DShadow shadowTextures[10];
+uniform sampler2DShadow shadowTextures;
 
-uniform mat4 DepthBiasMVP[10];
+uniform mat4 DepthBiasMVP;
 
 smooth in vec3 vPosition;
 smooth in vec3 vNormal;
@@ -73,14 +73,15 @@ vec4 directionalLight(int lightID)
 	float visibility = 1.0;
 	float bias = 0.05f;
 	
-	vec4 ShadowCoord = (DepthBiasMVP[lightID] * vec4(mPosition,1));
+	vec4 ShadowCoord = (DepthBiasMVP * vec4(mPosition,1));
 		
 	for(int i = 0; i < 4; ++i)
 	{
 		int index = i;
-		visibility -= 0.2*(1.0-texture( shadowTextures[lightID], vec3(ShadowCoord.xy + poissonDisk[index]/700.0, (ShadowCoord.z - bias)/ShadowCoord.w) ));
+		visibility -= 0.2*(1.0-texture( shadowTextures, vec3(ShadowCoord.xy + poissonDisk[index]/700.0, (ShadowCoord.z - bias)/ShadowCoord.w) ));
 	}
-	
+
+
 	
 	VP = lights.light[lightID].position.xyz;
 	
@@ -101,7 +102,7 @@ vec4 directionalLight(int lightID)
 		bt = nDotVP != 0.0 ? bt : 0.0;
 		bt = pow(bt, material.shininess);
 		
-	vec4 ambient = material.ambient * lights.light[lightID].ambient;
+	vec4 ambient = visibility * material.ambient * lights.light[lightID].ambient;
 	vec4 diffuse = visibility * material.diffuse * lights.light[lightID].diffuse * nDotVP;
 	vec4 specular = visibility * material.specular * lights.light[lightID].specular * bt;
 
@@ -175,7 +176,7 @@ vec4 calculateLight(int lightID)
 void main(void)
 {
 	material.diffuse = vec4(texture2D(myTextureSampler, uv).rgb,1);
-	material.ambient = material.diffuse*vec4(0.3,0.3,0.3,1);
+	material.ambient = material.diffuse*vec4(0.1,0.1,0.1,1);
 	material.specular = vec4(0.3,0.3,0.3,1);
 	material.shininess = 10;
 	

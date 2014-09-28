@@ -608,6 +608,8 @@ void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 
 	GLuint numLightLoc = glGetUniformLocation(program->programID, "num_lights");
 
+	
+
 	glUniform1i(numLightLoc, num_lights);
 
 	GLuint ViD = glGetUniformLocation(program->programID, "V");
@@ -616,32 +618,7 @@ void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 
 	glUniformMatrix4fv(ViD, 1, GL_FALSE, glm::value_ptr(View));
 
-	char* names[] = {
-		"DepthBiasMVP[0]",
-		"DepthBiasMVP[1]",
-		"DepthBiasMVP[2]",
-		"DepthBiasMVP[3]",
-		"DepthBiasMVP[4]",
-		"DepthBiasMVP[5]",
-		"DepthBiasMVP[6]",
-		"DepthBiasMVP[7]",
-		"DepthBiasMVP[8]",
-		"DepthBiasMVP[9]",
-	};
 
-
-	char* shadowNames[] = {
-		"shadowTextures[0]",
-		"shadowTextures[1]",
-		"shadowTextures[2]",
-		"shadowTextures[3]",
-		"shadowTextures[4]",
-		"shadowTextures[5]",
-		"shadowTextures[6]",
-		"shadowTextures[7]",
-		"shadowTextures[8]",
-		"shadowTextures[9]",
-	};
 
 	glm::mat4 biasMatrix(
 		0.5, 0.0, 0.0, 0.0,
@@ -650,20 +627,23 @@ void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 		0.5, 0.5, 0.5, 1.0
 	);
 
-	for(int i = 0; i < 10; ++i)
-	{
-		if(lights[i].shadow&&lights[i].active)
-		{
-			GLuint lightLoc = glGetUniformLocation(program->programID, names[i]);
-			glUniform4fv(lightLoc, 1, glm::value_ptr(lights[i].depthVP * biasMatrix));
-			
-			glActiveTexture(GL_TEXTURE0 + 3 + i);
-			glBindTexture(GL_TEXTURE_2D, lights[i].shadowTexture);
 
-			GLuint shadowLoc = glGetUniformLocation(program->programID, shadowNames[i]);
-			glUniform1i(shadowLoc, 3+i);
-		}
-	}
+
+
+	
+	glActiveTexture(GL_TEXTURE0 + 2 );
+	glBindTexture(GL_TEXTURE_2D, lights[0].shadowTexture);
+
+	GLuint shadowLoc = glGetUniformLocation(program->programID, "shadowTextures");
+	glUniform1i(shadowLoc, 2);
+
+	GLuint lightLoc = glGetUniformLocation(program->programID, "DepthBiasMVP");
+	char buffer[50];
+	GLint arraySize = 0;
+	GLenum type = 0;
+	GLsizei actualLength = 0;
+	glGetActiveUniform(program->programID, shadowLoc, 50, &actualLength, &arraySize, &type, buffer);
+
 
 	for(int i = 0, e = this->childNodes.size(); i < e; ++i)
 	{
@@ -675,6 +655,7 @@ void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 			GLuint textureLOC = glGetUniformLocation(program->programID, node->textureID[j].name.c_str());
 			glActiveTexture(GL_TEXTURE0 + j);
 			glBindTexture(GL_TEXTURE_2D, node->textureID[j].texture->textureID);
+printf("%d\n", textureLOC);
 			glUniform1i(textureLOC, j); 
 		}
 
@@ -687,6 +668,9 @@ void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 			glUniformMatrix4fv(MiD, 1, GL_FALSE, glm::value_ptr(node->transform.transformMatrix));
 			
 			glm::mat4 MVP = perspective * View * node->transform.transformMatrix;
+
+	
+			glUniformMatrix4fv(lightLoc, 1, GL_FALSE, glm::value_ptr( biasMatrix * (lights[0].depthVP * node->transform.transformMatrix)));
 
 			glUniformMatrix4fv(MVPiD, 1, GL_FALSE, glm::value_ptr(MVP));
 
@@ -1174,7 +1158,7 @@ void Scene::initializeShadowMap(int lightIndex)
 
 	glGenTextures(1, &lights[lightIndex].shadowTexture);
 	glBindTexture(GL_TEXTURE_2D, lights[lightIndex].shadowTexture);
-	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT16, 1024,1024,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT16, 1200,900,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1221,7 +1205,7 @@ void Scene::generateShadow()
 			for(int j = 0, je = renderables.size(); j < je; ++j)
 			{
 
-				glm::mat4 depthModelMatrix = renderables[i].transform.transformMatrix;
+				glm::mat4 depthModelMatrix = renderables[j].transform.transformMatrix;
 				glm::mat4 depthMVP = lights[i].depthVP * depthModelMatrix;
 
 
@@ -1369,7 +1353,7 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 	Texture* tex = this->createNewTexture("default");
 	tex->loadFile("./textures/default.tga");
 
-	this->createNewProgram("Standard", "./shaders/Blinn.vert", "./shaders/Blinn.frag");
+	this->createNewProgram("Standard", "./shaders/Phong.vert", "./shaders/Phong.frag");
 	this->createNewProgram("Shadow", "./shaders/shadow.vert", "./shaders/shadow.frag");
 	this->createNewProgram("2D", "./shaders/image.vert","./shaders/image.frag");
 	init2D();
