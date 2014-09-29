@@ -8,5 +8,5 @@ out vec3 color;
 
 void main()
 {	
-	color = vec3(texture2D(myTexture,uv).r);
+	color = vec3(texture2D(myTexture,uv).rgb);
 }

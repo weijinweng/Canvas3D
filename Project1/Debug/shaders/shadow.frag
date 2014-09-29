@@ -1,8 +1,8 @@
 #version 330 core
 
-out float fragmentDepth;
+layout (location = 0) out vec3 fragmentDepth;
 
 void main()
 {
-	fragmentDepth = gl_FragCoord.z;
+	fragmentDepth = vec3(gl_FragCoord.z);
 }
