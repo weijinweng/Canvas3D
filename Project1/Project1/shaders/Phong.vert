@@ -13,7 +13,7 @@ smooth out vec3 vPosition;
 smooth out vec3 vNormal;
 smooth out vec2 uv;
 smooth out vec3 mPosition;
- 
+smooth out vec3 normals;
 void main(void)
 {
     // Get surface normal in eye coordinates
@@ -30,4 +30,5 @@ void main(void)
 	
 	uv = uvC;
 	mPosition = position;
+	normals = normal;
 }

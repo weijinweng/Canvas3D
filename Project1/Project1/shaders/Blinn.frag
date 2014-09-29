@@ -38,6 +38,8 @@ uniform sampler2DShadow shadowTextures;
 
 uniform mat4 DepthBiasMVP;
 
+uniform mat4 V;
+
 smooth in vec3 vPosition;
 smooth in vec3 vNormal;
 in vec2 uv;
@@ -75,10 +77,10 @@ vec4 directionalLight(int lightID)
 	
 	vec4 ShadowCoord = (DepthBiasMVP * vec4(mPosition,1));
 		
-	for(int i = 0; i < 4; ++i)
+	for(int i = 0; i < 16; ++i)
 	{
 		int index = i;
-		visibility -= 0.2*(1.0-texture( shadowTextures, vec3(ShadowCoord.xy + poissonDisk[index]/700.0, (ShadowCoord.z - bias)/ShadowCoord.w) ));
+		visibility -= 0.2*(1.0-texture( shadowTextures, vec3(ShadowCoord.xy + poissonDisk[index]/500.0, (ShadowCoord.z - bias)/ShadowCoord.w) ));
 	}
 
 
@@ -102,7 +104,7 @@ vec4 directionalLight(int lightID)
 		bt = nDotVP != 0.0 ? bt : 0.0;
 		bt = pow(bt, material.shininess);
 		
-	vec4 ambient = visibility * material.ambient * lights.light[lightID].ambient;
+	vec4 ambient = 1.0 * material.ambient * lights.light[lightID].ambient;
 	vec4 diffuse = visibility * material.diffuse * lights.light[lightID].diffuse * nDotVP;
 	vec4 specular = visibility * material.specular * lights.light[lightID].specular * bt;
 

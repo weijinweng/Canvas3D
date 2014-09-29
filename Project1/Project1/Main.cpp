@@ -35,6 +35,7 @@ void computeMatrix(fpsCamera* cam)
 	int deltaTime = SDL_GetTicks() - lastTime;
 	lastTime = SDL_GetTicks();
 	float multiplier = 1.0f;
+	printf("%d\n",deltaTime);
 
 	int x,y;
 	SDL_GetMouseState(&x,&y);
@@ -146,7 +147,7 @@ int main(int argc, char* args[])
 	Texture* texture = window->renderer.createNewTexture("stuffffff");
 
 
-	std::vector<Mesh*> meshes = myScene->loadFromFile("dk.3ds");
+	std::vector<Mesh*> meshes = myScene->loadFromFile("dk.obj");
 	fpsCamera mycam(45.0f, 4.0f/3.0f, glm::vec3(0,0,0));
 	myScene->cameras.push_back(&mycam);
 	glEnable(GL_DEPTH_TEST);
@@ -157,43 +158,43 @@ int main(int argc, char* args[])
 
 	bodyTexture->loadFile("dragon_knight.jpg");
 
-	renderNode* node = myScene->getNode("knight:kni");
+	renderNode* node = myScene->getNode("knight_knight_");
 	node->setTexture("myTextureSampler", "Body");
 
 	Texture* weaponTexture = window->renderer.createNewTexture("Weapon");
 	weaponTexture->loadFile("knight_weapon_color.jpg");
 
-	renderNode* weaponsNode = myScene->getNode("weapon:wea");
+	renderNode* weaponsNode = myScene->getNode("weapon_weapon_");
 	weaponsNode->setTexture("myTextureSampler", "Weapon");
 
 	Texture* skirtsTexture = window->renderer.createNewTexture("Skirts");
 	skirtsTexture->loadFile("skirt_color.jpg");
 
-	renderNode* skirtsNode = myScene->getNode("skirt1:ski");
+	renderNode* skirtsNode = myScene->getNode("skirt1_skirt_");
 	skirtsNode->setTexture("skirts1:ski", "Skirts");
 	
 	Texture* shoulderTexture = window->renderer.createNewTexture("Shoulder");
 	shoulderTexture->loadFile("shoulders_color.jpg");
 	
-	renderNode* shoulderNode = myScene->getNode("shoulders:");
+	renderNode* shoulderNode = myScene->getNode("shoulders_shoulders_");
 	shoulderNode->setTexture("myTextureSampler", "Shoulder");
 
 	window->renderer.createNewTexture("helmet")->loadFile("helmet_color.jpg");
 
-	myScene->getNode("helmet1:he")->setTexture("myTextureSampler", "helmet");
+	myScene->getNode("helmet1_helmet_")->setTexture("myTextureSampler", "helmet");
 
 	window->renderer.createNewTexture("shield")->loadFile("shield_color.jpg");
 
-	myScene->getNode("shield:shi")->setTexture("myTextureSampler", "shield");
+	myScene->getNode("shield_shield_")->setTexture("myTextureSampler", "shield");
 	
-	Light* lol = myScene->addDirectionalLight("Light1", glm::vec3(1,1,0));
+	Light* lol = myScene->addDirectionalLight("Light1", glm::vec3(1,0.5,0));
 	myScene->activateShadow("Light1");
 
 	Texture* text = window->renderer.createNewTexture("Hello");
 
 	
 
-	myScene->root.orientation = glm::fquat(glm::vec3(-PI/2.0f,0.0f,0.0f)) * myScene->root.orientation  ;
+	
 	//Shadow map code
 	/*GLuint frameBuffer = 0;
 	glGenFramebuffers(1, &frameBuffer);
@@ -296,7 +297,7 @@ int main(int argc, char* args[])
 	myScene->generateLightBlock();
 	bool turnoff = false;
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
-
+	myScene->root.scale *= 1.0f;
 	while(!quit)
 	{
 		glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
@@ -376,7 +377,9 @@ int main(int argc, char* args[])
 		}
 		myScene->Render();
 
-		
+		Texture text;
+		text.textureID = lol->shadowTexture;
+
 		/*
 		glm::mat4 MVP = Perspective * View * Model;
 

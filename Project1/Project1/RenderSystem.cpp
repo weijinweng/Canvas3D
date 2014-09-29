@@ -655,7 +655,6 @@ void renderProgramID::Render(Camera* cam, int num_lights, Light* lights)
 			GLuint textureLOC = glGetUniformLocation(program->programID, node->textureID[j].name.c_str());
 			glActiveTexture(GL_TEXTURE0 + j);
 			glBindTexture(GL_TEXTURE_2D, node->textureID[j].texture->textureID);
-printf("%d\n", textureLOC);
 			glUniform1i(textureLOC, j); 
 		}
 
@@ -1090,7 +1089,7 @@ renderNode* Scene::getNode(std::string name)
 			return &renderables[i];
 	}
 
-	printf("Error finding\n");
+	printf("Error finding %s\n", name.c_str());
 	return NULL;
 }
 
@@ -1158,7 +1157,7 @@ void Scene::initializeShadowMap(int lightIndex)
 
 	glGenTextures(1, &lights[lightIndex].shadowTexture);
 	glBindTexture(GL_TEXTURE_2D, lights[lightIndex].shadowTexture);
-	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT16, 1200,900,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32, 1200,900,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1199,7 +1198,7 @@ void Scene::generateShadow()
 
 			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-			glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
+			glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,40);
 			glm::mat4 depthViewMatrix = glm::lookAt(glm::vec3(lights[i].properties.position.x,lights[i].properties.position.y,lights[i].properties.position.z),glm::vec3(0,0,0),glm::vec3(0,1,0));
 			lights[i].depthVP = depthProjectionMatrix * depthViewMatrix;
 			for(int j = 0, je = renderables.size(); j < je; ++j)
@@ -1353,7 +1352,7 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 	Texture* tex = this->createNewTexture("default");
 	tex->loadFile("./textures/default.tga");
 
-	this->createNewProgram("Standard", "./shaders/Phong.vert", "./shaders/Phong.frag");
+	this->createNewProgram("Standard", "./shaders/Toon.vert", "./shaders/Toon.frag");
 	this->createNewProgram("Shadow", "./shaders/shadow.vert", "./shaders/shadow.frag");
 	this->createNewProgram("2D", "./shaders/image.vert","./shaders/image.frag");
 	init2D();

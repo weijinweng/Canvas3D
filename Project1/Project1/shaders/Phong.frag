@@ -22,7 +22,7 @@ layout(shared) uniform Lights
     Light light[10];
 } lights;
  
-Material
+struct Material
 {
     vec4    ambient;
     vec4    diffuse;
@@ -38,10 +38,13 @@ uniform sampler2DShadow shadowTextures;
 
 uniform mat4 DepthBiasMVP;
  
+uniform mat4 V;
 smooth in vec3 vPosition;
 smooth in vec3 vNormal;
 in vec2 uv;
 in vec3 mPosition;
+in vec3 normals;
+
 
 vec2 poissonDisk[16] = vec2[]( 
    vec2( -0.94201624, -0.39906216 ), 
@@ -62,6 +65,8 @@ vec2 poissonDisk[16] = vec2[](
    vec2( 0.14383161, -0.14100790 ) 
 );
 
+
+
 vec4 pointLight (int lightID)
 {
     float nDotVP;       // normal * light direction
@@ -75,14 +80,14 @@ vec4 pointLight (int lightID)
 	float bias = 0.05f;
 	vec4 ShadowCoord = (DepthBiasMVP * vec4(mPosition, 1));
 	
-	for(int i = 0; i < 4; ++i)
+	for(int i = 0; i < 16; ++i)
 	{
 		int index = i;
-		visibility -= 0.2*(1.0-texture( shadowTextures, vec3(ShadowCoord.xy + poissonDisk[index]/700.0, (ShadowCoord.z - bias)/ShadowCoord.w) ));
+		visibility -= 0.2*(1.0-texture( shadowTextures, vec3(ShadowCoord.xy + poissonDisk[index]/1000.0, (ShadowCoord.z - bias)/ShadowCoord.w) ));
 	}
 	
     // Compute vector from surface to light position
-    VP = vec3 (lights.light[lightID].position) - vPosition;
+    VP = ( V * (lights.light[lightID].position)).xyz - vPosition;
 	
     // Compute distance between surface and light position
     d = length (VP);
@@ -106,8 +111,8 @@ vec4 pointLight (int lightID)
     else
         pf = pow (nDotR, material.shininess);
  
-    vec4 ambient = visibility*material.ambient * lights.light[lightID].ambient * attenuation;
-    vec4 diffuse = visibility*material.diffuse * lights.light[lightID].diffuse * nDotVP * attenuation;
+    vec4 ambient = visibility * material.ambient * lights.light[lightID].ambient * attenuation;
+    vec4 diffuse = visibility* material.diffuse * lights.light[lightID].diffuse * nDotVP * attenuation;
     vec4 specular = visibility* material.specular * lights.light[lightID].specular * pf * attenuation;
  
     return ambient + diffuse + specular;
@@ -116,11 +121,11 @@ vec4 pointLight (int lightID)
 void main(void)
 {
 	material.diffuse = vec4(texture2D(myTextureSampler, uv).rgb,1);
-	material.ambient = material.diffuse * vec4(0.1,0.1,0.1,1);
+	material.ambient = material.diffuse * vec4(1.0,1.0,1.0,1);
 	material.specular = vec4(0.3,0.3,0.3,1);
 	material.shininess = 10;
 	
     for (int i = 0; i < num_lights; ++i)
         fragmentColor += pointLight (i);
-
+	
 }

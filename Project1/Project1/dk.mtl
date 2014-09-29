@@ -1,5 +1,15 @@
 # 3ds Max Wavefront OBJ Exporter v0.97b - (c)2007 guruware
-# File Created: 27.09.2014 16:17:58
+# File Created: 28.09.2014 20:05:30
+
+newmtl wire_028149177
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.1098 0.5843 0.6941
+	Kd 0.1098 0.5843 0.6941
+	Ks 0.3500 0.3500 0.3500
 
 newmtl Material__2
 	Ns 10.0000
@@ -83,12 +93,22 @@ newmtl Material__3
 	map_Ka C:\Users\weijin\Desktop\Downloads\dragon_knight\materialsrc\models\heroes\dragon_knight\shoulders_color.tga
 	map_Kd C:\Users\weijin\Desktop\Downloads\dragon_knight\materialsrc\models\heroes\dragon_knight\shoulders_color.tga
 
-newmtl wire_006135006
+newmtl wire_228153184
 	Ns 32
 	d 1
 	Tr 0
 	Tf 1 1 1
 	illum 2
-	Ka 0.0235 0.5294 0.0235
-	Kd 0.0235 0.5294 0.0235
+	Ka 0.8941 0.6000 0.7216
+	Kd 0.8941 0.6000 0.7216
+	Ks 0.3500 0.3500 0.3500
+
+newmtl wire_184155229
+	Ns 32
+	d 1
+	Tr 0
+	Tf 1 1 1
+	illum 2
+	Ka 0.7216 0.6078 0.8980
+	Kd 0.7216 0.6078 0.8980
 	Ks 0.3500 0.3500 0.3500
