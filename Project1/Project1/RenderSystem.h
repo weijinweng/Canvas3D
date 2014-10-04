@@ -19,6 +19,11 @@ namespace Canvas{
 		}
 	};
 
+	struct Animation {
+	public:
+
+	};
+
 	//Nodes of a transform Tree, the node memory are stored inside renderNodes
 	struct transformNode{
 		void calculateMatrix();
@@ -253,6 +258,7 @@ namespace Canvas{
 		Scene(RenderSys* parent, char* filepath);
 		Scene(RenderSys* parent);
 		std::vector<Mesh*> loadFromFile(char* filepath);
+		std::vector<Mesh*> loadFBXScene(char* filepath);
 		std::vector<Mesh*> initSceneFromAiScene(const aiScene* scene);
 		void initRenderNodesFromAiScene(aiNode* root, std::vector<Mesh*> meshes);
 		transformNode* addRenderNodesFromAiNodes(aiNode* child, std::vector<Mesh*> meshes);
@@ -290,6 +296,7 @@ namespace Canvas{
 		std::vector<Texture> textures;
 		int maxShaders;
 		std::vector<renderProgram> programs;
+		FbxManager* fbxManager;
 		RenderSys();
 		bool initialize(SDL_Window* windowHandler);
 		bool end();

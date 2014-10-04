@@ -121,7 +121,7 @@ glm::mat4 Camera::getView()
 
 glm::mat4 Camera::getPerspective()
 {
-	Perspective = glm::perspective(FOV, aspectRatio, 0.1f, 100.0f);
+	Perspective = glm::perspective(FOV, aspectRatio, 0.1f, 1000.0f);
 	return Perspective;
 }
 
@@ -784,10 +784,33 @@ Scene::Scene(RenderSys* parent, char* filepath):parentSys(parent),active_Lights_
 	this->loadFromFile(filepath);
 }
 
+std::vector<Mesh*> Scene::loadFBXScene(char* filepath)
+{
+	FbxIOSettings* ios = FbxIOSettings::Create(parentSys->fbxManager, IOSROOT);
+	parentSys->fbxManager->SetIOSettings(ios);
 
+	FbxImporter* importer = FbxImporter::Create(parentSys->fbxManager, "");
+
+	bool importerStatus = importer->Initialize(filepath, -1, parentSys->fbxManager->GetIOSettings());
+
+	if(!importerStatus) {
+		printf("Call to FbxImporter::Initialize() failed.\n");
+		printf("Error returned: %s\n\n", importer->GetStatus().GetErrorString());
+		exit(-1);
+	}
+	importer->Destroy();
+}
 
 std::vector<Mesh*> Scene::loadFromFile(char* filepath)
 {
+	std::string file = std::string(filepath);
+	std::string extension = file.substr(file.find_last_of('.'), file.size());
+	printf("%s\n", extension.c_str());
+	if(extension == ".fbx")
+	{
+		printf("%s\n",extension.c_str());
+		return loadFBXScene(filepath);
+	}
 	if(parentSys == NULL)
 	{
 		printf("Error parentSys does not exists\n");
@@ -795,7 +818,6 @@ std::vector<Mesh*> Scene::loadFromFile(char* filepath)
 	Assimp::Importer importer;
 
 	const aiScene* scene = importer.ReadFile(filepath, aiProcess_FlipUVs|aiProcess_GenSmoothNormals);
-
 	if(scene )
 	{
 		return initSceneFromAiScene(scene);
@@ -1157,7 +1179,7 @@ void Scene::initializeShadowMap(int lightIndex)
 
 	glGenTextures(1, &lights[lightIndex].shadowTexture);
 	glBindTexture(GL_TEXTURE_2D, lights[lightIndex].shadowTexture);
-	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32, 1200,900,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
+	glTexImage2D(GL_TEXTURE_2D,0,GL_DEPTH_COMPONENT32, 2000,1500,0,GL_DEPTH_COMPONENT,GL_FLOAT,0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR); 
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -1187,7 +1209,7 @@ void Scene::generateShadow()
 	GLuint program = shadowProgram->programID;
 
 	glBindFramebuffer(GL_FRAMEBUFFER, this->shadowMapFrameBuffer);
-
+	glViewport(0,0,2000,1500);
 	for(int i = 0, e = 10; i < e; ++i)
 	{
 		if(lights[i].shadow && lights[i].properties.type == 2)
@@ -1198,12 +1220,13 @@ void Scene::generateShadow()
 
 			glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
 
-			glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,40);
+			glm::mat4 depthProjectionMatrix = glm::ortho<float>(-10,10,-10,10,-10,20);
 			glm::mat4 depthViewMatrix = glm::lookAt(glm::vec3(lights[i].properties.position.x,lights[i].properties.position.y,lights[i].properties.position.z),glm::vec3(0,0,0),glm::vec3(0,1,0));
 			lights[i].depthVP = depthProjectionMatrix * depthViewMatrix;
 			for(int j = 0, je = renderables.size(); j < je; ++j)
 			{
-
+				if(renderables[j].name == "Plane001")
+					continue;
 				glm::mat4 depthModelMatrix = renderables[j].transform.transformMatrix;
 				glm::mat4 depthMVP = lights[i].depthVP * depthModelMatrix;
 
@@ -1221,6 +1244,7 @@ void Scene::generateShadow()
 		}
 	}
 	glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	glViewport(0,0, 1200, 900);
 }
 
 void Scene::testShadowMap()
@@ -1356,6 +1380,7 @@ bool RenderSys::initialize(SDL_Window* windowHandler)
 	this->createNewProgram("Shadow", "./shaders/shadow.vert", "./shaders/shadow.frag");
 	this->createNewProgram("2D", "./shaders/image.vert","./shaders/image.frag");
 	init2D();
+	fbxManager = FbxManager::Create();
 	return true;
 }
 

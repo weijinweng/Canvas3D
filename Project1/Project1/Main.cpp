@@ -35,7 +35,6 @@ void computeMatrix(fpsCamera* cam)
 	int deltaTime = SDL_GetTicks() - lastTime;
 	lastTime = SDL_GetTicks();
 	float multiplier = 1.0f;
-	printf("%d\n",deltaTime);
 
 	int x,y;
 	SDL_GetMouseState(&x,&y);
